@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_PATH =  "${terraform}"  // Update this path to where terraform executable is located
+        TERRAFORM_PATH =  "${terraform}" 
         AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     }
