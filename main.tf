@@ -103,5 +103,24 @@ resource "aws_eks_node_group" "example" {
 }
 
 output "kubeconfig" {
-  value = aws_eks_cluster.example.kubeconfig
+  value = <<EOL
+apiVersion: v1
+clusters:
+- cluster:
+    server: ${aws_eks_cluster.example.endpoint}
+    certificate-authority-data: ${aws_eks_cluster.example.certificate_authority[0].data}
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: aws
+  name: aws
+current-context: aws
+kind: Config
+preferences: {}
+users:
+- name: aws
+  user:
+    token: ${data.aws_eks_cluster_auth.example.token}
+EOL
 }

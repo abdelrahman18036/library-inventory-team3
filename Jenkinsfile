@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_PATH = "${terraform}" // Use the environment variable set in Jenkins
+        TERRAFORM_PATH = "${terraform}"  // Update this path to where terraform.exe is located
     }
 
     options {
