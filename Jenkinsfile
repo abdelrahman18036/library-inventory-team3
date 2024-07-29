@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'my-python-app'
-        DOCKER_REPO = 'your-dockerhub-username/my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
     }
 
@@ -13,10 +12,21 @@ pipeline {
     }
 
     stages {
+        stage('Prepare') {
+            steps {
+                script {
+                    // Retrieve Docker Hub username from credentials
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        env.DOCKER_REPO = "${DOCKER_USERNAME}/${DOCKER_IMAGE}"
+                        echo "Using Docker Hub repository: ${DOCKER_REPO}"
+                    }
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {
-                    echo "Building Docker image ${DOCKER_IMAGE}"
+                    echo "Building Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
                     docker.build("${DOCKER_REPO}:${env.BUILD_NUMBER}")
                 }
             }
@@ -25,19 +35,21 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
-                    echo 'No tests to run.'
                     // Add your test commands here
+                    // Example: pip install -r requirements.txt and pytest
+                    sh 'pip install -r requirements.txt'
+                    sh 'pytest'
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying Docker image ${DOCKER_IMAGE}"
-                    docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
+                    echo "Deploying Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
                         docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").push()
                     }
-                    docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
                         docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").run('-p 5000:5000')
                     }
                 }
