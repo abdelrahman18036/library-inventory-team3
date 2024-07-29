@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
+        KUBECONFIG_PATH = 'kubeconfig'
     }
 
     options {
@@ -23,7 +24,36 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
+        stage('Checkout Terraform Code') {
+            steps {
+                // Checkout Terraform code from GitHub
+                git credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/yourusername/your-terraform-repo.git'
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                script {
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+        stage('Configure Kubeconfig') {
+            steps {
+                script {
+                    def kubeconfig = sh(script: 'terraform output -raw kubeconfig', returnStdout: true).trim()
+                    writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
+                    sh 'export KUBECONFIG=${KUBECONFIG_PATH}'
+                }
+            }
+        }
+        stage('Build Docker Image') {
             steps {
                 script {
                     echo "Building Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
@@ -31,7 +61,7 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
+        stage('Test Docker Image') {
             steps {
                 script {
                     echo 'Running tests...'
@@ -39,16 +69,56 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
                 script {
-                    echo "Deploying Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
+                    echo "Pushing Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
                     docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
                         docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").push()
                     }
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
-                        docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").run('-p 5000:5000')
-                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo "Deploying Docker image to Kubernetes"
+                    sh """
+                    kubectl apply -f - <<EOF
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    metadata:
+                      name: my-python-app-deployment
+                    spec:
+                      replicas: 2
+                      selector:
+                        matchLabels:
+                          app: my-python-app
+                      template:
+                        metadata:
+                          labels:
+                            app: my-python-app
+                        spec:
+                          containers:
+                          - name: my-python-app
+                            image: ${DOCKER_REPO}:${env.BUILD_NUMBER}
+                            ports:
+                            - containerPort: 5000
+                    ---
+                    apiVersion: v1
+                    kind: Service
+                    metadata:
+                      name: my-python-app-service
+                    spec:
+                      selector:
+                        app: my-python-app
+                      ports:
+                      - protocol: TCP
+                        port: 80
+                        targetPort: 5000
+                      type: LoadBalancer
+                    EOF
+                    """
                 }
             }
         }
