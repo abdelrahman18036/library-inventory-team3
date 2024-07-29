@@ -16,7 +16,6 @@ pipeline {
         stage('Prepare') {
             steps {
                 script {
-                    // Retrieve Docker Hub username from credentials
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         env.DOCKER_REPO = "${DOCKER_USERNAME}/${DOCKER_IMAGE}"
                         echo "Using Docker Hub repository: ${DOCKER_REPO}"
@@ -24,35 +23,27 @@ pipeline {
                 }
             }
         }
-        stage('Checkout Terraform Code') {
-            steps {
-                // Checkout Terraform code from GitHub
-                git url: 'https://github.com/abdelrahman18036/library-inventory-team3.git'
-            }
-        }
         stage('Terraform Init') {
             steps {
                 script {
-                    echo 'Initializing Terraform...'
-                    sh 'terraform init'
+                    bat 'terraform init'
                 }
             }
         }
         stage('Terraform Apply') {
             steps {
                 script {
-                    echo 'Applying Terraform configuration...'
-                    sh 'terraform apply -auto-approve'
+                    bat 'terraform apply -auto-approve'
                 }
             }
         }
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    echo 'Configuring kubeconfig...'
-                    def kubeconfig = sh(script: 'terraform output -raw kubeconfig', returnStdout: true).trim()
+                    def kubeconfig = bat(script: 'terraform output -raw kubeconfig', returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
-                    sh 'export KUBECONFIG=${KUBECONFIG_PATH}'
+                    env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
+                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
         }
@@ -87,7 +78,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying Docker image to Kubernetes"
-                    sh """
+                    bat """
                     kubectl apply -f - <<EOF
                     apiVersion: apps/v1
                     kind: Deployment
