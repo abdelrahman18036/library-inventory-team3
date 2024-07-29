@@ -24,12 +24,6 @@ pipeline {
                 }
             }
         }
-        stage('Checkout Terraform Code') {
-            steps {
-                // Checkout Terraform code from GitHub
-                git credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/yourusername/your-terraform-repo.git'
-            }
-        }
         stage('Terraform Init') {
             steps {
                 script {
@@ -65,6 +59,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
+                    // Implement your test logic here
                     echo 'Tests passed!'
                 }
             }
