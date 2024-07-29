@@ -3,14 +3,13 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'my-python-app'
+        DOCKER_REPO = 'your-dockerhub-username/my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
     }
 
     options {
-        // Set build timeout to 1 hour
-        timeout(time: 1, unit: 'HOURS')
-        // Keep only the last 10 builds
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 1, unit: 'HOURS') // Set build timeout to 1 hour
+        buildDiscarder(logRotator(numToKeepStr: '10')) // Keep only the last 10 builds
     }
 
     stages {
@@ -18,7 +17,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image ${DOCKER_IMAGE}"
-                    docker.build("${DOCKER_IMAGE}")
+                    docker.build("${DOCKER_REPO}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -26,8 +25,8 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
-                 
-
+                    echo 'No tests to run.'
+                    // Add your test commands here
                 }
             }
         }
@@ -36,7 +35,10 @@ pipeline {
                 script {
                     echo "Deploying Docker image ${DOCKER_IMAGE}"
                     docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
-                        docker.image("${DOCKER_IMAGE}").run('-p 5000:5000')
+                        docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").push()
+                    }
+                    docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
+                        docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").run('-p 5000:5000')
                     }
                 }
             }
@@ -48,7 +50,6 @@ pipeline {
             script {
                 echo 'Build, test, and deployment completed successfully.'
             }
-            // Add notification for successful build
             // Example: Send email notification
             emailext(
                 subject: "SUCCESS: Jenkins Build ${env.BUILD_NUMBER}",
@@ -60,7 +61,6 @@ pipeline {
             script {
                 echo 'Build, test, or deployment failed.'
             }
-            // Add notification for failed build
             // Example: Send email notification
             emailext(
                 subject: "FAILURE: Jenkins Build ${env.BUILD_NUMBER}",
