@@ -5,6 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
+        TERRAFORM_PATH = "${terraform}" // Use the environment variable set in Jenkins
     }
 
     options {
@@ -26,21 +27,21 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    bat 'terraform init'
+                    bat "${env.TERRAFORM_PATH}\\terraform init"
                 }
             }
         }
         stage('Terraform Apply') {
             steps {
                 script {
-                    bat 'terraform apply -auto-approve'
+                    bat "${env.TERRAFORM_PATH}\\terraform apply -auto-approve"
                 }
             }
         }
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = bat(script: 'terraform output -raw kubeconfig', returnStdout: true).trim()
+                    def kubeconfig = bat(script: "${env.TERRAFORM_PATH}\\terraform output -raw kubeconfig", returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
