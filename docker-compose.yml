@@ -1,0 +1,13 @@
+version: '3.8'  # Specify the Compose file version
+
+services:
+  app:
+    image: my-python-app  # Replace with your image name
+    build: .  # Use this if you have a Dockerfile in the same directory
+    ports:
+      - "5000:5000"  # Map host port 5000 to container port 5000
+    networks:
+      - my-network
+
+networks:
+  my-network:

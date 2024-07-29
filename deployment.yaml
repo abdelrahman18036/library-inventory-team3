@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library-inventory-deployment  
+  namespace: omar                   
+spec:
+  replicas: 3 
+  selector:  
+    matchLabels:
+      app: library-inventory  
+  template:
+    metadata:
+      labels:  
+        app: library-inventory  
+    spec:
+      containers:  
+        - name: library-inventory  
+          image: omar727/bm:my-python-app 
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000  
+          volumeMounts:
+            - name: library-volume  
+              mountPath: /app/data   
+      volumes:
+        - name: library-volume
+          persistentVolumeClaim:
+            claimName: library-inventory-pvc  

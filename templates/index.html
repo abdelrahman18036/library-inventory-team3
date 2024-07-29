@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col">
+    <form class="form-inline" method="POST" action="{{ url_for('search_book') }}">
+      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="title">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+    </form>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <h2>Books</h2>
+    <ul class="list-group">
+      {% for book in books %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <i class="fas fa-book"></i> {{ book.title }} by {{ book.author }}
+          <div>
+            <form method="POST" action="{{ url_for('remove_book') }}" class="d-inline">
+              <input type="hidden" name="title" value="{{ book.title }}">
+              <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+            </form>
+            <a href="{{ url_for('update_book', title=book.title) }}" class="btn btn-warning btn-sm">Update</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <h2>Borrowed Books</h2>
+    <ul class="list-group">
+      {% for book in borrowed_books %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <i class="fas fa-book"></i> {{ book.title }} borrowed by {{ book.borrower }}
+          <div>
+            <form method="POST" action="{{ url_for('remove_book') }}" class="d-inline">
+              <input type="hidden" name="title" value="{{ book.title }}">
+              <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

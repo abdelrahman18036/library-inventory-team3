@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: library-inventory-replicaset
+  namespace: omar
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: library-inventory
+  template:
+    metadata:
+      labels:
+        app: library-inventory
+    spec:
+      containers:
+        - name: library-inventory
+          image: omar727/bm:my-python-app 
+          ports:
+            - containerPort: 5000

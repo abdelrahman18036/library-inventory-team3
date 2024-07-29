@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col">
+    <h2>400 - Bad Request</h2>
+    <p>{{ error.description }}</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Go Back to Home</a>
+  </div>
+</div>
+{% endblock %}
