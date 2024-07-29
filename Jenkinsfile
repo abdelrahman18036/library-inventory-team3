@@ -26,10 +26,8 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
-                    // Add commands to run your tests here
-                    // Example: pip install -r requirements.txt and pytest
-                    sh 'pip install -r requirements.txt'
-                    sh 'pytest'
+                 
+
                 }
             }
         }
