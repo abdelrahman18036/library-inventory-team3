@@ -6,6 +6,7 @@ pipeline {
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_PATH = "${terraform}"  // Update this path to where terraform.exe is located
+        AWS_CREDENTIALS_ID = 'aws-credentials'
     }
 
     options {
@@ -34,7 +35,13 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    bat "${env.TERRAFORM_PATH}\\terraform apply -auto-approve"
+                    withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS_ID}", passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                        bat """
+                        set AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        set AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        ${env.TERRAFORM_PATH}\\terraform apply -auto-approve
+                        """
+                    }
                 }
             }
         }
@@ -125,7 +132,6 @@ pipeline {
             script {
                 echo 'Build, test, and deployment completed successfully.'
             }
-            // Example: Send email notification
             emailext(
                 subject: "SUCCESS: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} succeeded.",
@@ -136,7 +142,6 @@ pipeline {
             script {
                 echo 'Build, test, or deployment failed.'
             }
-            // Example: Send email notification
             emailext(
                 subject: "FAILURE: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} failed.",
