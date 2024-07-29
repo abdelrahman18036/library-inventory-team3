@@ -24,9 +24,16 @@ pipeline {
                 }
             }
         }
+        stage('Checkout Terraform Code') {
+            steps {
+                // Checkout Terraform code from GitHub
+                git url: 'https://github.com/abdelrahman18036/library-inventory-team3.git'
+            }
+        }
         stage('Terraform Init') {
             steps {
                 script {
+                    echo 'Initializing Terraform...'
                     sh 'terraform init'
                 }
             }
@@ -34,6 +41,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
+                    echo 'Applying Terraform configuration...'
                     sh 'terraform apply -auto-approve'
                 }
             }
@@ -41,6 +49,7 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
+                    echo 'Configuring kubeconfig...'
                     def kubeconfig = sh(script: 'terraform output -raw kubeconfig', returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
                     sh 'export KUBECONFIG=${KUBECONFIG_PATH}'
