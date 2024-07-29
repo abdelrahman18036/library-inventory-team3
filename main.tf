@@ -102,13 +102,18 @@ resource "aws_eks_node_group" "example" {
   instance_types = ["t3.medium"]
 }
 
+data "aws_eks_cluster_auth" "example" {
+  name = aws_eks_cluster.example.name
+}
+
 output "kubeconfig" {
+  sensitive = true
   value = <<EOL
 apiVersion: v1
 clusters:
 - cluster:
     server: ${aws_eks_cluster.example.endpoint}
-    certificate-authority-data: ${aws_eks_cluster.example.certificate_authority[0].data}
+      certificate-authority-data: ${aws_eks_cluster.example.certificate_authority[0].data}
   name: kubernetes
 contexts:
 - context:
