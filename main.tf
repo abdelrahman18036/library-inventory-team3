@@ -2,13 +2,13 @@ provider "aws" {
   region = "us-west-2"
 }
 
-resource "aws_vpc" "main" {
+resource "aws_vpc" "main_new" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "example" {
+resource "aws_subnet" "example_new" {
   count                   = 2
-  vpc_id                  = aws_vpc.main.id
+  vpc_id                  = aws_vpc.main_new.id
   cidr_block              = element(["10.0.1.0/24", "10.0.2.0/24"], count.index)
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
   map_public_ip_on_launch = true
@@ -16,8 +16,8 @@ resource "aws_subnet" "example" {
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_iam_role" "eks_role" {
-  name = "ekss-role"
+resource "aws_iam_role" "eks_role_new" {
+  name = "eks-role-new"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -33,7 +33,7 @@ resource "aws_iam_role" "eks_role" {
   })
 
   inline_policy {
-    name = "eks-policy"
+    name = "eks-policy-new"
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
@@ -47,17 +47,17 @@ resource "aws_iam_role" "eks_role" {
   }
 }
 
-resource "aws_eks_cluster" "example" {
-  name     = "library-inventory-team3"
-  role_arn = aws_iam_role.eks_role.arn
+resource "aws_eks_cluster" "example_new" {
+  name     = "library-inventory-team4"
+  role_arn = aws_iam_role.eks_role_new.arn
 
   vpc_config {
-    subnet_ids = aws_subnet.example[*].id
+    subnet_ids = aws_subnet.example_new[*].id
   }
 }
 
-resource "aws_iam_role" "node_role" {
-  name = "node-role"
+resource "aws_iam_role" "node_role_new" {
+  name = "node-role-new"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -73,7 +73,7 @@ resource "aws_iam_role" "node_role" {
   })
 
   inline_policy {
-    name = "node-policy"
+    name = "node-policy-new"
     policy = jsonencode({
       Version = "2012-10-17"
       Statement = [
@@ -87,11 +87,11 @@ resource "aws_iam_role" "node_role" {
   }
 }
 
-resource "aws_eks_node_group" "example" {
-  cluster_name    = aws_eks_cluster.example.name
-  node_group_name = "library-inventory-team3-group"
-  node_role_arn   = aws_iam_role.node_role.arn
-  subnet_ids      = aws_subnet.example[*].id
+resource "aws_eks_node_group" "example_new" {
+  cluster_name    = aws_eks_cluster.example_new.name
+  node_group_name = "library-inventory-team4-group"
+  node_role_arn   = aws_iam_role.node_role_new.arn
+  subnet_ids      = aws_subnet.example_new[*].id
 
   scaling_config {
     desired_size = 2
@@ -102,8 +102,8 @@ resource "aws_eks_node_group" "example" {
   instance_types = ["t3.medium"]
 }
 
-data "aws_eks_cluster_auth" "example" {
-  name = aws_eks_cluster.example.name
+data "aws_eks_cluster_auth" "example_new" {
+  name = aws_eks_cluster.example_new.name
 }
 
 output "kubeconfig" {
@@ -112,8 +112,8 @@ output "kubeconfig" {
 apiVersion: v1
 clusters:
 - cluster:
-    server: ${aws_eks_cluster.example.endpoint}
-      certificate-authority-data: ${aws_eks_cluster.example.certificate_authority[0].data}
+    server: ${aws_eks_cluster.example_new.endpoint}
+      certificate-authority-data: ${aws_eks_cluster.example_new.certificate_authority[0].data}
   name: kubernetes
 contexts:
 - context:
@@ -126,6 +126,6 @@ preferences: {}
 users:
 - name: aws
   user:
-    token: ${data.aws_eks_cluster_auth.example.token}
+    token: ${data.aws_eks_cluster_auth.example_new.token}
 EOL
 }
