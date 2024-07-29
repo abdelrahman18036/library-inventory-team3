@@ -17,7 +17,7 @@ resource "aws_subnet" "example" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_iam_role" "eks_role" {
-  name = "eks-role"
+  name = "ekss-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
