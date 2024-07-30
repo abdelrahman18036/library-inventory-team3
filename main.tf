@@ -6,6 +6,10 @@ resource "aws_vpc" "main_new" {
   cidr_block = "10.0.0.0/16"
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_subnet" "example_new" {
   count                   = 2
   vpc_id                  = aws_vpc.main_new.id
@@ -14,31 +18,29 @@ resource "aws_subnet" "example_new" {
   map_public_ip_on_launch = true
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "aws_iam_role" "eks_role_new" {
   name = "eks-role-new"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow"
+        Effect = "Allow",
         Principal = {
           Service = "eks.amazonaws.com"
-        }
+        },
         Action = "sts:AssumeRole"
-      },
+      }
     ]
   })
 
   inline_policy {
     name = "eks-policy-new"
     policy = jsonencode({
-      Version = "2012-10-17"
+      Version = "2012-10-17",
       Statement = [
         {
-          Effect = "Allow"
+          Effect = "Allow",
           Action = [
             "eks:DescribeCluster",
             "ec2:Describe*",
@@ -48,7 +50,7 @@ resource "aws_iam_role" "eks_role_new" {
             "ecr:BatchGetImage",
             "logs:CreateLogStream",
             "logs:PutLogEvents"
-          ]
+          ],
           Resource = "*"
         }
       ]
@@ -60,25 +62,25 @@ resource "aws_iam_role" "node_role_new" {
   name = "node-role-new"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow"
+        Effect = "Allow",
         Principal = {
           Service = "ec2.amazonaws.com"
-        }
+        },
         Action = "sts:AssumeRole"
-      },
+      }
     ]
   })
 
   inline_policy {
     name = "node-policy-new"
     policy = jsonencode({
-      Version = "2012-10-17"
+      Version = "2012-10-17",
       Statement = [
         {
-          Effect = "Allow"
+          Effect = "Allow",
           Action = [
             "ec2:Describe*",
             "ecr:GetDownloadUrlForLayer",
@@ -99,7 +101,7 @@ resource "aws_iam_role" "node_role_new" {
             "iam:ListAttachedRolePolicies",
             "iam:ListInstanceProfiles",
             "iam:PassRole"
-          ]
+          ],
           Resource = "*"
         }
       ]
@@ -130,10 +132,8 @@ resource "aws_eks_node_group" "example_new" {
 
   instance_types = ["t3.medium"]
 
-  # Optional: Add key_name if you need SSH access to the nodes
-  # remote_access {
-  #   ec2_ssh_key = "eks-key-pair"
-  # }
+  # Ensure that the worker nodes have the necessary security groups attached
+  # and that the control plane's security group allows communication with the worker nodes.
 }
 
 data "aws_eks_cluster_auth" "example_new" {
@@ -142,7 +142,7 @@ data "aws_eks_cluster_auth" "example_new" {
 
 output "kubeconfig" {
   sensitive = true
-  value = <<EOL
+  value = <<-EOL
 apiVersion: v1
 clusters:
 - cluster:
