@@ -1,5 +1,5 @@
-resource "aws_iam_role" "team3_eks_cluster" {
-  name = "team3_eks_cluster_role"
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.team_prefix}_eks_cluster_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -22,8 +22,8 @@ resource "aws_iam_role" "team3_eks_cluster" {
   ]
 }
 
-resource "aws_iam_role" "team3_eks_nodes" {
-  name = "team3_eks_node_role"
+resource "aws_iam_role" "eks_nodes_role" {
+  name = "${var.team_prefix}_eks_node_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -47,15 +47,15 @@ resource "aws_iam_role" "team3_eks_nodes" {
   ]
 }
 
-resource "aws_eks_cluster" "team3_library_cluster" {
-  depends_on = [aws_iam_role.team3_eks_cluster]
+resource "aws_eks_cluster" "library_cluster" {
+  depends_on = [aws_iam_role.eks_cluster_role]
 
-  name     = "team3-library-cluster"
-  role_arn = aws_iam_role.team3_eks_cluster.arn
+  name     = var.cluster_name
+  role_arn = aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
-    subnet_ids = [aws_subnet.team3_public_subnet.id, aws_subnet.team3_private_subnet.id]
-    security_group_ids = [aws_security_group.team3_eks_control_plane_sg.id]
+    subnet_ids         = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id]
+    security_group_ids = [aws_security_group.eks_control_plane_sg.id]
   }
 
   timeouts {
@@ -64,20 +64,20 @@ resource "aws_eks_cluster" "team3_library_cluster" {
   }
 }
 
-resource "aws_eks_node_group" "team3_library_node_group" {
-  cluster_name    = aws_eks_cluster.team3_library_cluster.name
-  node_group_name = "team3-library-node-group"
-  node_role_arn   = aws_iam_role.team3_eks_nodes.arn
-  subnet_ids      = [aws_subnet.team3_public_subnet.id, aws_subnet.team3_private_subnet.id]
+resource "aws_eks_node_group" "library_node_group" {
+  cluster_name    = var.cluster_name
+  node_group_name = var.node_group_name
+  node_role_arn   = aws_iam_role.eks_nodes_role.arn
+  subnet_ids      = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id]
 
   scaling_config {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
+    desired_size = var.eks_node_desired_size
+    max_size     = var.eks_node_max_size
+    min_size     = var.eks_node_min_size
   }
 
   depends_on = [
-    aws_eks_cluster.team3_library_cluster,
-    aws_iam_role.team3_eks_nodes
+    aws_eks_cluster.library_cluster,
+    aws_iam_role.eks_nodes_role
   ]
 }

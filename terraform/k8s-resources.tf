@@ -1,12 +1,12 @@
-resource "kubernetes_namespace" "team3" {
+resource "kubernetes_namespace" "namespace" {
   metadata {
-    name = "team3"
+    name = var.team_prefix
   }
 }
 
-resource "kubernetes_persistent_volume" "team3_library_inventory_pv" {
+resource "kubernetes_persistent_volume" "library_inventory_pv" {
   metadata {
-    name = "team3-library-inventory-pv"
+    name = "${var.team_prefix}-library-inventory-pv"
   }
 
   spec {
@@ -25,15 +25,15 @@ resource "kubernetes_persistent_volume" "team3_library_inventory_pv" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "team3_library_inventory_pvc" {
+resource "kubernetes_persistent_volume_claim" "library_inventory_pvc" {
   depends_on = [
-    kubernetes_namespace.team3,
-    kubernetes_persistent_volume.team3_library_inventory_pv
+    kubernetes_namespace.namespace,
+    kubernetes_persistent_volume.library_inventory_pv
   ]
 
   metadata {
-    name      = "team3-library-inventory-pvc"
-    namespace = kubernetes_namespace.team3.metadata[0].name
+    name      = "${var.team_prefix}-library-inventory-pvc"
+    namespace = kubernetes_namespace.namespace.metadata[0].name
   }
 
   spec {
@@ -43,18 +43,18 @@ resource "kubernetes_persistent_volume_claim" "team3_library_inventory_pvc" {
         storage = "5Gi"
       }
     }
-    volume_name = "team3-library-inventory-pv"
+    volume_name = kubernetes_persistent_volume.library_inventory_pv.metadata[0].name
   }
 }
 
-resource "kubernetes_deployment" "team3_library_inventory" {
+resource "kubernetes_deployment" "library_inventory" {
   depends_on = [
-    kubernetes_namespace.team3
+    kubernetes_namespace.namespace
   ]
 
   metadata {
-    name      = "team3-library-inventory-deployment"
-    namespace = kubernetes_namespace.team3.metadata[0].name
+    name      = "${var.team_prefix}-library-inventory-deployment"
+    namespace = kubernetes_namespace.namespace.metadata[0].name
   }
 
   spec {
@@ -62,36 +62,36 @@ resource "kubernetes_deployment" "team3_library_inventory" {
 
     selector {
       match_labels = {
-        app = "team3-library-inventory"
+        app = "${var.team_prefix}-library-inventory"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "team3-library-inventory"
+          app = "${var.team_prefix}-library-inventory"
         }
       }
 
       spec {
         container {
-          name  = "team3-library-inventory"
-          image = "orange18036/team3-library"
+          name  = "${var.team_prefix}-library-inventory"
+          image = "orange18036/${var.team_prefix}-library"
           port {
             container_port = 5000
           }
 
           volume_mount {
-            name       = "team3-library-volume"
+            name       = "${var.team_prefix}-library-volume"
             mount_path = "/app/data"
           }
         }
 
         volume {
-          name = "team3-library-volume"
+          name = "${var.team_prefix}-library-volume"
 
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.team3_library_inventory_pvc.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim.library_inventory_pvc.metadata[0].name
           }
         }
       }
@@ -99,14 +99,14 @@ resource "kubernetes_deployment" "team3_library_inventory" {
   }
 }
 
-resource "kubernetes_service" "team3_library_inventory_service" {
+resource "kubernetes_service" "library_inventory_service" {
   depends_on = [
-    kubernetes_namespace.team3
+    kubernetes_namespace.namespace
   ]
 
   metadata {
-    name      = "team3-library-inventory-service"
-    namespace = kubernetes_namespace.team3.metadata[0].name
+    name      = "${var.team_prefix}-library-inventory-service"
+    namespace = kubernetes_namespace.namespace.metadata[0].name
   }
 
   spec {
@@ -117,7 +117,7 @@ resource "kubernetes_service" "team3_library_inventory_service" {
     }
 
     selector = {
-      app = "team3-library-inventory"
+      app = "${var.team_prefix}-library-inventory"
     }
   }
 }
