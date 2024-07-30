@@ -39,20 +39,23 @@ resource "aws_iam_role" "eks_role_new" {
       Statement = [
         {
           Effect   = "Allow"
-          Action   = "eks:*"
+          Action   = [
+            "eks:*",
+            "ec2:DescribeInstances",
+            "ec2:DescribeRegions",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeKeyPairs",
+            "ec2:CreateSecurityGroup",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:RevokeSecurityGroupIngress",
+            "ec2:CreateTags"
+          ]
           Resource = "*"
         },
       ]
     })
-  }
-}
-
-resource "aws_eks_cluster" "example_new" {
-  name     = "library-inventory-team4"
-  role_arn = aws_iam_role.eks_role_new.arn
-
-  vpc_config {
-    subnet_ids = aws_subnet.example_new[*].id
   }
 }
 
@@ -79,11 +82,40 @@ resource "aws_iam_role" "node_role_new" {
       Statement = [
         {
           Effect   = "Allow"
-          Action   = "ec2:*"
+          Action   = [
+            "ec2:Describe*",
+            "ec2:AttachVolume",
+            "ec2:CreateSnapshot",
+            "ec2:CreateTags",
+            "ec2:CreateVolume",
+            "ec2:DeleteSnapshot",
+            "ec2:DeleteTags",
+            "ec2:DeleteVolume",
+            "ec2:Describe*",
+            "ec2:DetachVolume",
+            "eks:DescribeCluster",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups"
+          ]
           Resource = "*"
         },
       ]
     })
+  }
+}
+
+resource "aws_eks_cluster" "example_new" {
+  name     = "library-inventory-team4"
+  role_arn = aws_iam_role.eks_role_new.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.example_new[*].id
   }
 }
 
@@ -113,7 +145,7 @@ apiVersion: v1
 clusters:
 - cluster:
     server: ${aws_eks_cluster.example_new.endpoint}
-      certificate-authority-data: ${aws_eks_cluster.example_new.certificate_authority[0].data}
+    certificate-authority-data: ${aws_eks_cluster.example_new.certificate_authority[0].data}
   name: kubernetes
 contexts:
 - context:
