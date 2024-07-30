@@ -16,6 +16,13 @@ variable "team_prefix" {
   default     = "team3"
 }
 
+variable "dockerhub_image" {
+  description = "The DockerHub image to deploy."
+  type        = string
+  default     = "orange18036/team3-library"
+  
+}
+
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC."
   type        = string

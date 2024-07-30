@@ -76,7 +76,7 @@ resource "kubernetes_deployment" "library_inventory" {
       spec {
         container {
           name  = "${var.team_prefix}-library-inventory"
-          image = "orange18036/${var.team_prefix}-library"
+          image = var.dockerhub_image
           port {
             container_port = 5000
           }

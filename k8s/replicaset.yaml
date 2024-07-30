@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
   name: library-inventory-replicaset
-  namespace: omar
+  namespace: team3
 spec:
   replicas: 3
   selector:
@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: library-inventory
-          image: omar727/bm:my-python-app 
+          image: orange18036/team3-library
           ports:
             - containerPort: 5000
