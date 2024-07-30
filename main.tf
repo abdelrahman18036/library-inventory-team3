@@ -1,165 +1,126 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "us-west-2"  # Change to your preferred region
 }
 
-resource "aws_vpc" "main_new" {
-  cidr_block = "10.0.0.0/16"
+# EKS Cluster
+resource "aws_eks_cluster" "example" {
+  name     = "library-inventory-cluster"
+  role_arn  = aws_iam_role.eks_cluster.arn
+  version   = "1.21"  # Update to your desired Kubernetes version
+
+  vpc_config {
+    subnet_ids = aws_subnet.example[*].id
+  }
+
+  tags = {
+    Name = "library-inventory-cluster"
+  }
 }
 
-resource "aws_subnet" "example_new" {
-  count                   = 2
-  vpc_id                  = aws_vpc.main_new.id
-  cidr_block              = element(["10.0.1.0/24", "10.0.2.0/24"], count.index)
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-  map_public_ip_on_launch = true
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_iam_role" "eks_role_new" {
-  name = "eks-role-new"
+# IAM Role for EKS Cluster
+resource "aws_iam_role" "eks_cluster" {
+  name = "eks-cluster-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
         Principal = {
           Service = "eks.amazonaws.com"
         }
-        Action = "sts:AssumeRole"
-      },
+      }
     ]
   })
-
-  inline_policy {
-    name = "eks-policy-new"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "eks:DescribeCluster",
-            "ec2:Describe*",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchGetImage",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ]
-          Resource = "*"
-        }
-      ]
-    })
-  }
 }
 
-resource "aws_iam_role" "node_role_new" {
-  name = "node-role-new"
+# IAM Policy for EKS Cluster
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  role       = aws_iam_role.eks_cluster.name
+  policy_arn  = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+
+# IAM Role for EKS Node Group
+resource "aws_iam_role" "eks_node" {
+  name = "eks-node-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-        Action = "sts:AssumeRole"
-      },
+      }
     ]
   })
-
-  inline_policy {
-    name = "node-policy-new"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "ec2:Describe*",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchGetImage",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-            "eks:DescribeCluster",
-            "autoscaling:DescribeAutoScalingGroups",
-            "autoscaling:UpdateAutoScalingGroup",
-            "autoscaling:DescribeAutoScalingInstances",
-            "autoscaling:DescribeTags",
-            "elasticloadbalancing:*",
-            "iam:GetPolicy",
-            "iam:GetPolicyVersion",
-            "iam:GetRole",
-            "iam:ListAttachedRolePolicies",
-            "iam:ListInstanceProfiles",
-            "iam:PassRole"
-          ]
-          Resource = "*"
-        }
-      ]
-    })
-  }
 }
 
-resource "aws_eks_cluster" "example_new" {
-  name     = "library-inventory-team4"
-  role_arn = aws_iam_role.eks_role_new.arn
-
-  vpc_config {
-    subnet_ids = aws_subnet.example_new[*].id
-  }
+# IAM Policy for EKS Node Group
+resource "aws_iam_role_policy_attachment" "eks_node_policy" {
+  role       = aws_iam_role.eks_node.name
+  policy_arn  = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
-resource "aws_eks_node_group" "example_new" {
-  cluster_name    = aws_eks_cluster.example_new.name
-  node_group_name = "library-inventory-team4-group"
-  node_role_arn   = aws_iam_role.node_role_new.arn
-  subnet_ids      = aws_subnet.example_new[*].id
+resource "aws_iam_role_policy_attachment" "eks_node_policy_cni" {
+  role       = aws_iam_role.eks_node.name
+  policy_arn  = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
 
+# EKS Node Group
+resource "aws_eks_node_group" "example" {
+  cluster_name    = aws_eks_cluster.example.name
+  node_group_name = "library-inventory-node-group"
+  node_role_arn   = aws_iam_role.eks_node.arn
+  subnet_ids      = aws_subnet.example[*].id
   scaling_config {
     desired_size = 2
     max_size     = 3
     min_size     = 1
   }
 
-  instance_types = ["t3.medium"]
+  # Update your AMI type if necessary
+  ami_type = "AL2_x86_64"
 
-  # Optional: Add key_name if you need SSH access to the nodes
-  # remote_access {
-  #   ec2_ssh_key = "eks-key-pair"
-  # }
+  tags = {
+    Name = "library-inventory-node-group"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-data "aws_eks_cluster_auth" "example_new" {
-  name = aws_eks_cluster.example_new.name
+# VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
 }
 
-output "kubeconfig" {
-  sensitive = true
-  value = <<EOL
-apiVersion: v1
-clusters:
-- cluster:
-    server: ${aws_eks_cluster.example_new.endpoint}
-    certificate-authority-data: ${aws_eks_cluster.example_new.certificate_authority[0].data}
-  name: kubernetes
-contexts:
-- context:
-    cluster: kubernetes
-    user: aws
-  name: aws
-current-context: aws
-kind: Config
-preferences: {}
-users:
-- name: aws
-  user:
-    token: ${data.aws_eks_cluster_auth.example_new.token}
-EOL
+# Subnets
+resource "aws_subnet" "example" {
+  count = 2
+
+  vpc_id            = aws_vpc.example.id
+  cidr_block        = "10.0.${count.index + 1}.0/24"
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+}
+
+data "aws_availability_zones" "available" {}
+
+# Security Group
+resource "aws_security_group" "example" {
+  vpc_id = aws_vpc.example.id
+}
+
+# Output for EKS Cluster
+output "cluster_name" {
+  value = aws_eks_cluster.example.name
+}
+
+# Output for EKS Node Group
+output "node_group_name" {
+  value = aws_eks_node_group.example.node_group_name
 }
