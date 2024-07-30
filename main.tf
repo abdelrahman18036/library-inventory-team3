@@ -40,50 +40,19 @@ resource "aws_iam_role" "eks_role_new" {
         {
           Effect = "Allow"
           Action = [
-            "ec2:Describe*",
-            "ec2:AttachVolume",
-            "ec2:CreateSnapshot",
-            "ec2:CreateTags",
-            "ec2:CreateVolume",
-            "ec2:DeleteSnapshot",
-            "ec2:DeleteTags",
-            "ec2:DeleteVolume",
-            "ec2:Describe*",
-            "ec2:DetachVolume",
             "eks:DescribeCluster",
+            "ec2:Describe*",
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetAuthorizationToken",
             "ecr:BatchGetImage",
             "logs:CreateLogStream",
-            "logs:PutLogEvents",
-            "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups",
-            "autoscaling:DescribeAutoScalingGroups",
-            "autoscaling:UpdateAutoScalingGroup",
-            "autoscaling:DescribeAutoScalingInstances",
-            "autoscaling:DescribeTags",
-            "elasticloadbalancing:*",
-            "iam:GetPolicy",
-            "iam:GetPolicyVersion",
-            "iam:GetRole",
-            "iam:ListAttachedRolePolicies",
-            "iam:ListInstanceProfiles",
-            "iam:PassRole"
+            "logs:PutLogEvents"
           ]
           Resource = "*"
         }
       ]
     })
-  }
-}
-
-resource "aws_eks_cluster" "example_new" {
-  name     = "library-inventory-team4"
-  role_arn = aws_iam_role.eks_role_new.arn
-
-  vpc_config {
-    subnet_ids = aws_subnet.example_new[*].id
   }
 }
 
@@ -112,24 +81,13 @@ resource "aws_iam_role" "node_role_new" {
           Effect = "Allow"
           Action = [
             "ec2:Describe*",
-            "ec2:AttachVolume",
-            "ec2:CreateSnapshot",
-            "ec2:CreateTags",
-            "ec2:CreateVolume",
-            "ec2:DeleteSnapshot",
-            "ec2:DeleteTags",
-            "ec2:DeleteVolume",
-            "ec2:Describe*",
-            "ec2:DetachVolume",
-            "eks:DescribeCluster",
             "ecr:GetDownloadUrlForLayer",
             "ecr:BatchCheckLayerAvailability",
             "ecr:GetAuthorizationToken",
             "ecr:BatchGetImage",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
-            "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups",
+            "eks:DescribeCluster",
             "autoscaling:DescribeAutoScalingGroups",
             "autoscaling:UpdateAutoScalingGroup",
             "autoscaling:DescribeAutoScalingInstances",
@@ -149,6 +107,15 @@ resource "aws_iam_role" "node_role_new" {
   }
 }
 
+resource "aws_eks_cluster" "example_new" {
+  name     = "library-inventory-team4"
+  role_arn = aws_iam_role.eks_role_new.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.example_new[*].id
+  }
+}
+
 resource "aws_eks_node_group" "example_new" {
   cluster_name    = aws_eks_cluster.example_new.name
   node_group_name = "library-inventory-team4-group"
@@ -163,9 +130,10 @@ resource "aws_eks_node_group" "example_new" {
 
   instance_types = ["t3.medium"]
 
-  remote_access {
-    ec2_ssh_key = "eks-key-pair"
-  }
+  # Optional: Add key_name if you need SSH access to the nodes
+  # remote_access {
+  #   ec2_ssh_key = "eks-key-pair"
+  # }
 }
 
 data "aws_eks_cluster_auth" "example_new" {
