@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "aws_profile" {
   description = "The AWS profile to use."
   type        = string
-  default     = "orange-team3"
+  default     = "orange"
 }
 
 variable "team_prefix" {

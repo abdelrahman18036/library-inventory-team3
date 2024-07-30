@@ -1,5 +1,5 @@
 # Set AWS profile and region
-$profile = "orange-team3"
+$profile = "orange"
 $region = "us-west-2"
 
 # Check EKS Cluster Status
