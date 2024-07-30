@@ -1,7 +1,7 @@
 #!/bin/bash
 
 $profile = "orange"
-$region = "us-west-2"
+$region = "us-west-1"
 
 # Check EKS Cluster Status
 aws eks describe-cluster --name team3-library-cluster --region $region --profile $profile

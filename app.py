@@ -128,5 +128,6 @@ def page_not_found(e):
 @app.errorhandler(400)
 def bad_request(e):
     return render_template('400.html', error=e), 400
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=False)
+

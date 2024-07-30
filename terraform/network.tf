@@ -9,7 +9,7 @@ resource "aws_subnet" "public_subnet" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.public_subnet_cidr
   map_public_ip_on_launch  = true
-  availability_zone        = "us-west-2a"
+  availability_zone        = "us-west-1a"
   tags = {
     Name = "${var.team_prefix}_public_subnet"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
@@ -21,7 +21,7 @@ resource "aws_subnet" "private_subnet" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.private_subnet_cidr
   map_public_ip_on_launch  = false
-  availability_zone        = "us-west-2b"
+  availability_zone        = "us-west-1c"
   tags = {
     Name = "${var.team_prefix}_private_subnet"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"

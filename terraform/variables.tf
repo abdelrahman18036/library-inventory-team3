@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "The AWS region to create resources in."
   type        = string
-  default     = "us-west-2"
+  default     = "us-west-1"
 }
 
 variable "aws_profile" {
@@ -19,8 +19,7 @@ variable "team_prefix" {
 variable "dockerhub_image" {
   description = "The DockerHub image to deploy."
   type        = string
-  default     = "orange18036/team3-library"
-  
+  default     = "orange18036/team3-library:latest"
 }
 
 variable "vpc_cidr" {
