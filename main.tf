@@ -23,11 +23,11 @@ resource "aws_iam_role" "eks_role_new" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
           Service = "eks.amazonaws.com"
         }
+        Action = "sts:AssumeRole"
       },
     ]
   })
@@ -38,51 +38,8 @@ resource "aws_iam_role" "eks_role_new" {
       Version = "2012-10-17"
       Statement = [
         {
-          Effect   = "Allow"
-          Action   = [
-            "eks:*",
-            "ec2:DescribeInstances",
-            "ec2:DescribeRegions",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeKeyPairs",
-            "ec2:CreateSecurityGroup",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:RevokeSecurityGroupIngress",
-            "ec2:CreateTags"
-          ]
-          Resource = "*"
-        },
-      ]
-    })
-  }
-}
-
-resource "aws_iam_role" "node_role_new" {
-  name = "node-role-new"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  inline_policy {
-    name = "node-policy-new"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "ec2:Describe*",
             "ec2:AttachVolume",
             "ec2:CreateSnapshot",
@@ -101,10 +58,21 @@ resource "aws_iam_role" "node_role_new" {
             "logs:CreateLogStream",
             "logs:PutLogEvents",
             "logs:DescribeLogStreams",
-            "logs:DescribeLogGroups"
+            "logs:DescribeLogGroups",
+            "autoscaling:DescribeAutoScalingGroups",
+            "autoscaling:UpdateAutoScalingGroup",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeTags",
+            "elasticloadbalancing:*",
+            "iam:GetPolicy",
+            "iam:GetPolicyVersion",
+            "iam:GetRole",
+            "iam:ListAttachedRolePolicies",
+            "iam:ListInstanceProfiles",
+            "iam:PassRole"
           ]
           Resource = "*"
-        },
+        }
       ]
     })
   }
@@ -116,6 +84,68 @@ resource "aws_eks_cluster" "example_new" {
 
   vpc_config {
     subnet_ids = aws_subnet.example_new[*].id
+  }
+}
+
+resource "aws_iam_role" "node_role_new" {
+  name = "node-role-new"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      },
+    ]
+  })
+
+  inline_policy {
+    name = "node-policy-new"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "ec2:Describe*",
+            "ec2:AttachVolume",
+            "ec2:CreateSnapshot",
+            "ec2:CreateTags",
+            "ec2:CreateVolume",
+            "ec2:DeleteSnapshot",
+            "ec2:DeleteTags",
+            "ec2:DeleteVolume",
+            "ec2:Describe*",
+            "ec2:DetachVolume",
+            "eks:DescribeCluster",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups",
+            "autoscaling:DescribeAutoScalingGroups",
+            "autoscaling:UpdateAutoScalingGroup",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeTags",
+            "elasticloadbalancing:*",
+            "iam:GetPolicy",
+            "iam:GetPolicyVersion",
+            "iam:GetRole",
+            "iam:ListAttachedRolePolicies",
+            "iam:ListInstanceProfiles",
+            "iam:PassRole"
+          ]
+          Resource = "*"
+        }
+      ]
+    })
   }
 }
 
@@ -132,6 +162,10 @@ resource "aws_eks_node_group" "example_new" {
   }
 
   instance_types = ["t3.medium"]
+
+  remote_access {
+    ec2_ssh_key = "eks-key-pair"
+  }
 }
 
 data "aws_eks_cluster_auth" "example_new" {
