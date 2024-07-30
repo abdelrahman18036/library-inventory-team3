@@ -19,7 +19,7 @@ resource "aws_eks_cluster" "example" {
 
 # IAM Role for EKS Cluster
 resource "aws_iam_role" "eks_cluster" {
-  name = "eks-cluster-role"
+  name = "eks-cluster-role-new"  # Changed name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 
 # IAM Role for EKS Node Group
 resource "aws_iam_role" "eks_node" {
-  name = "eks-node-role"
+  name = "eks-node-role-new"  # Changed name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -82,7 +82,6 @@ resource "aws_eks_node_group" "example" {
     min_size     = 1
   }
 
-  # Update your AMI type if necessary
   ami_type = "AL2_x86_64"
 
   tags = {
