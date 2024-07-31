@@ -7,8 +7,8 @@ pipeline {
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
-        AWS_CLI_PATH = 'C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe'
-        KUBECTL_PATH = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe'
+        AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
+        KUBECTL_PATH = '"C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe"'
     }
 
     options {
@@ -75,7 +75,7 @@ pipeline {
                 }
             }
         }
-        stage('Push Docker Image') {
+         stage('Push Docker Image') {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
