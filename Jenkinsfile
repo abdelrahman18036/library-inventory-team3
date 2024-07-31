@@ -5,8 +5,8 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_PATH = "${terraform}"  // Update this path to where terraform.exe is located
-        AWS_CREDENTIALS = 'aws-credentials'  // Update this to your credentials ID
+        TERRAFORM_PATH = "${env.WORKSPACE}/terraform"  // Adjust this path if Terraform is located elsewhere
+        AWS_CREDENTIALS = 'aws-credentials'  // Your AWS credentials ID for Terraform
     }
 
     options {
@@ -15,23 +15,16 @@ pipeline {
     }
 
     stages {
-        stage('Prepare') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        env.DOCKER_REPO = "${DOCKER_USERNAME}/${DOCKER_IMAGE}"
-                        echo "Using Docker Hub repository: ${DOCKER_REPO}"
-                    }
-                }
-            }
-        }
         stage('Terraform Init') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
                         env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
                         env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
-                        bat "${env.TERRAFORM_PATH}\\terraform init"
+                        sh """
+                        cd ${env.TERRAFORM_PATH}
+                        terraform init
+                        """
                     }
                 }
             }
@@ -42,7 +35,10 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
                         env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
                         env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
-                        bat "${env.TERRAFORM_PATH}\\terraform apply -auto-approve"
+                        sh """
+                        cd ${env.TERRAFORM_PATH}
+                        terraform apply -auto-approve
+                        """
                     }
                 }
             }
@@ -50,9 +46,9 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = bat(script: "${env.TERRAFORM_PATH}\\terraform output -raw kubeconfig", returnStdout: true).trim()
+                    def kubeconfig = sh(script: "cd ${env.TERRAFORM_PATH} && terraform output -raw kubeconfig", returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
-                    env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
+                    env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
@@ -87,43 +83,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Deploying Docker image to Kubernetes"
-                    bat """
-                    kubectl apply -f - <<EOF
-                    apiVersion: apps/v1
-                    kind: Deployment
-                    metadata:
-                      name: my-python-app-deployment
-                    spec:
-                      replicas: 2
-                      selector:
-                        matchLabels:
-                          app: my-python-app
-                      template:
-                        metadata:
-                          labels:
-                            app: my-python-app
-                        spec:
-                          containers:
-                          - name: my-python-app
-                            image: ${DOCKER_REPO}:${env.BUILD_NUMBER}
-                            ports:
-                            - containerPort: 5000
-                    ---
-                    apiVersion: v1
-                    kind: Service
-                    metadata:
-                      name: my-python-app-service
-                    spec:
-                      selector:
-                        app: my-python-app
-                      ports:
-                      - protocol: TCP
-                        port: 80
-                        targetPort: 5000
-                      type: LoadBalancer
-                    EOF
-                    """
+                    withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
+                        echo "Deploying Docker image to Kubernetes"
+                        sh """
+                        kubectl apply -f ${env.WORKSPACE}/k8s/deployment.yaml
+                        kubectl apply -f ${env.WORKSPACE}/k8s/service.yaml
+                        """
+                    }
                 }
             }
         }
@@ -138,7 +104,7 @@ pipeline {
             emailext(
                 subject: "SUCCESS: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} succeeded.",
-                to: 'abdelrahman.18036@gmail.com'
+                to: 'your-email@example.com'
             )
         }
         failure {
@@ -149,7 +115,7 @@ pipeline {
             emailext(
                 subject: "FAILURE: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} failed.",
-                to: 'abdelrahman.18036@gmail.com'
+                to: 'your-email@example.com'
             )
         }
         always {
