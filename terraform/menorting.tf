@@ -1,5 +1,5 @@
 resource "helm_release" "prometheus" {
-  name       = "${var.team_prefix}_prometheus"
+  name       = "prometheus"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus"
   namespace  = "monitoring"
@@ -26,7 +26,7 @@ resource "helm_release" "prometheus" {
 }
 
 resource "helm_release" "grafana" {
-  name       = "${var.team_prefix}_grafana"
+  name       = "grafana"
   repository = "https://grafana.github.io/helm-charts"
   chart      = "grafana"
   namespace  = "monitoring"
