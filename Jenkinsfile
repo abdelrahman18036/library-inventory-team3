@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_EXEC_PATH = tool 'terraform'
+        TERRAFORM_EXEC_PATH = "${terraform}"
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
         AWS_REGION = 'us-west-2'
     }
