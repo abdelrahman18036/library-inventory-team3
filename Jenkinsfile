@@ -5,8 +5,9 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_PATH = "${env.WORKSPACE}/terraform"  // Adjust this path if Terraform is located elsewhere
-        AWS_CREDENTIALS = 'aws-credentials'  // Your AWS credentials ID for Terraform
+        TERRAFORM_PATH = "${terraform}"  // This will use the environment variable you provided
+        AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+        AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
     }
 
     options {
@@ -18,28 +19,20 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
-                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
-                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
-                        sh """
-                        cd ${env.TERRAFORM_PATH}
-                        terraform init
-                        """
-                    }
+                    sh """
+                    cd ${env.TERRAFORM_PATH}
+                    terraform init
+                    """
                 }
             }
         }
         stage('Terraform Apply') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
-                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
-                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
-                        sh """
-                        cd ${env.TERRAFORM_PATH}
-                        terraform apply -auto-approve
-                        """
-                    }
+                    sh """
+                    cd ${env.TERRAFORM_PATH}
+                    terraform apply -auto-approve
+                    """
                 }
             }
         }
