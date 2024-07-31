@@ -20,10 +20,12 @@ users:
     token: ${data.aws_eks_cluster_auth.cluster_auth.token}
 EOL
   description = "Kubeconfig content"
+  sensitive = true  # Marking this output as sensitive
 }
 
 output "certificate_authority_data" {
   value = aws_eks_cluster.library_cluster.certificate_authority[0].data
+  sensitive = true  # Marking this output as sensitive
 }
 
 output "cluster_endpoint" {
