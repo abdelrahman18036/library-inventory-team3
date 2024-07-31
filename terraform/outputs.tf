@@ -20,7 +20,7 @@ users:
     token: ${data.aws_eks_cluster_auth.cluster_auth.token}
 EOL
   description = "Kubeconfig content"
-  sensitive = true  # Marking this output as sensitive
+  sensitive = true  
 }
 
 output "certificate_authority_data" {
@@ -54,4 +54,8 @@ output "private_subnet_id_a" {
 
 output "private_subnet_id_b" {
   value = aws_subnet.private_subnet_b.id
+}
+
+output "eks_cluster_name" {
+  value = aws_eks_cluster.library_cluster.name
 }
