@@ -20,10 +20,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        // Ensure the AWS environment variables are set
+                        // Set environment variables for AWS credentials
                         env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
                         env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-                        echo 'AWS credentials set in environment'
                     }
                 }
             }
@@ -33,6 +32,8 @@ pipeline {
                 script {
                     bat """
                     cd ${env.TERRAFORM_CONFIG_PATH}
+                    set AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    set AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
                     ${env.TERRAFORM_EXEC_PATH} init
                     """
                 }
@@ -43,6 +44,8 @@ pipeline {
                 script {
                     bat """
                     cd ${env.TERRAFORM_CONFIG_PATH}
+                    set AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    set AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
                     ${env.TERRAFORM_EXEC_PATH} apply -auto-approve
                     """
                 }
