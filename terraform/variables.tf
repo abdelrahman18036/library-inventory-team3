@@ -16,12 +16,6 @@ variable "team_prefix" {
   default     = "team3"
 }
 
-variable "dockerhub_image" {
-  description = "The DockerHub image to deploy."
-  type        = string
-  default     = "orange18036/team3-library:latest"
-}
-
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC."
   type        = string
@@ -98,4 +92,16 @@ variable "eks_node_desired_size" {
   description = "The desired size of the EKS node group."
   type        = number
   default     = 1
+}
+
+variable "grafana_admin_password" {
+  description = "The admin password for Grafana"
+  type        = string
+  default     = "admin"
+}
+
+variable "prometheus_scrape_interval" {
+  description = "The global scrape interval for Prometheus"
+  type        = string
+  default     = "15s"
 }

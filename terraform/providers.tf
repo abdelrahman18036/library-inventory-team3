@@ -17,3 +17,12 @@ provider "kubernetes" {
   config_path            = "~/.kube/config"
   config_context         = "arn:aws:eks:us-west-2:637423483309:cluster/team3-library-cluster"
 }
+
+
+provider "helm" {
+  kubernetes {
+    host                   = aws_eks_cluster.library_cluster.endpoint
+    token                  = data.aws_eks_cluster_auth.cluster_auth.token
+    cluster_ca_certificate = base64decode(aws_eks_cluster.library_cluster.certificate_authority[0].data)
+  }
+}
