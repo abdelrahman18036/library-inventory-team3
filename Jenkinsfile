@@ -19,7 +19,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh """
+                    bat """
                     cd ${env.TERRAFORM_CONFIG_PATH}
                     ${env.TERRAFORM_EXEC_PATH} init
                     """
@@ -29,7 +29,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    sh """
+                    bat """
                     cd ${env.TERRAFORM_CONFIG_PATH}
                     ${env.TERRAFORM_EXEC_PATH} apply -auto-approve
                     """
@@ -39,7 +39,7 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = sh(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
+                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
                     env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    bat "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -67,9 +67,10 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
-                    }
+                    bat """
+                    docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}
+                    docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                    """
                 }
             }
         }
@@ -78,7 +79,7 @@ pipeline {
                 script {
                     withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
                         echo "Deploying Docker image to Kubernetes"
-                        sh """
+                        bat """
                         ${env.AWS_CLI_PATH}\\kubectl apply -f ${env.WORKSPACE}/k8s/deployment.yaml
                         ${env.AWS_CLI_PATH}\\kubectl apply -f ${env.WORKSPACE}/k8s/service.yaml
                         """
