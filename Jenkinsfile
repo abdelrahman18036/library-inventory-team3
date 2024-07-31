@@ -10,6 +10,7 @@ pipeline {
         AWS_CLI_PATH = "${aws}"
         KUBECTL_PATH = "${kubectl}"
         NAMESPACE = 'team3'
+        TRIVY_PATH = 'D:\\Programs\\trivy'
     }
 
     options {
@@ -37,6 +38,34 @@ pipeline {
                         script {
                             echo "Building Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             bat "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
+                        }
+                    }
+                }
+
+                stage('Scan Docker Image with Trivy') {
+                    steps {
+                        script {
+                            echo "Scanning Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} with Trivy"
+                            bat """
+                                "${env.TRIVY_PATH}" image --format table --output trivy-results.txt ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                                type trivy-results.txt
+                            """
+                            
+                            // Optional: Fail the build if Trivy finds HIGH or CRITICAL vulnerabilities
+                            // Uncomment the following lines if you want to enforce this
+                            /*
+                            def trivyStatus = bat(script: """
+                                "${env.TRIVY_PATH}" image --exit-code 1 --severity HIGH,CRITICAL ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                            """, returnStatus: true)
+                            if (trivyStatus != 0) {
+                                error "Trivy found vulnerabilities with HIGH or CRITICAL severity"
+                            }
+                            */
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts 'trivy-results.txt'
                         }
                     }
                 }
