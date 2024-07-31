@@ -5,10 +5,8 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_EXEC_PATH = "${terraform}"  // Path where Terraform executable is located
-        TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"  // Path to Terraform configuration files
-        AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-        AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+        TERRAFORM_EXEC_PATH = "${terraform}"
+        TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
     }
 
     options {
@@ -20,9 +18,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
-                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
-                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
+                    withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
                         sh """
                         cd ${env.TERRAFORM_CONFIG_PATH}
                         ${env.TERRAFORM_EXEC_PATH}/terraform init
@@ -34,9 +30,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
-                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
-                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
+                    withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
                         sh """
                         cd ${env.TERRAFORM_CONFIG_PATH}
                         ${env.TERRAFORM_EXEC_PATH}/terraform apply -auto-approve
@@ -102,21 +96,13 @@ pipeline {
             script {
                 echo 'Build, test, and deployment completed successfully.'
             }
-            emailext(
-                subject: "SUCCESS: Jenkins Build ${env.BUILD_NUMBER}",
-                body: "The build ${env.BUILD_NUMBER} succeeded.",
-                to: 'your-email@example.com'
-            )
+       
         }
         failure {
             script {
                 echo 'Build, test, or deployment failed.'
             }
-            emailext(
-                subject: "FAILURE: Jenkins Build ${env.BUILD_NUMBER}",
-                body: "The build ${env.BUILD_NUMBER} failed.",
-                to: 'your-email@example.com'
-            )
+           
         }
         always {
             script {
