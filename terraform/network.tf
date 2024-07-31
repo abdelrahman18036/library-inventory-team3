@@ -5,25 +5,49 @@ resource "aws_vpc" "team_vpc" {
   }
 }
 
-resource "aws_subnet" "public_subnet" {
+resource "aws_subnet" "public_subnet_a" {
   vpc_id                   = aws_vpc.team_vpc.id
-  cidr_block               = var.public_subnet_cidr
+  cidr_block               = var.public_subnet_cidr_a
   map_public_ip_on_launch  = true
-  availability_zone        = "us-west-1a"
+  availability_zone        = data.aws_availability_zones.available.names[0]
   tags = {
-    Name = "${var.team_prefix}_public_subnet"
+    Name = "${var.team_prefix}_public_subnet_a"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb" = "1"
   }
 }
 
-resource "aws_subnet" "private_subnet" {
+resource "aws_subnet" "public_subnet_b" {
   vpc_id                   = aws_vpc.team_vpc.id
-  cidr_block               = var.private_subnet_cidr
-  map_public_ip_on_launch  = false
-  availability_zone        = "us-west-1c"
+  cidr_block               = var.public_subnet_cidr_b
+  map_public_ip_on_launch  = true
+  availability_zone        = data.aws_availability_zones.available.names[1]
   tags = {
-    Name = "${var.team_prefix}_private_subnet"
+    Name = "${var.team_prefix}_public_subnet_b"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb" = "1"
+  }
+}
+
+resource "aws_subnet" "private_subnet_a" {
+  vpc_id                   = aws_vpc.team_vpc.id
+  cidr_block               = var.private_subnet_cidr_a
+  map_public_ip_on_launch  = false
+  availability_zone        = data.aws_availability_zones.available.names[0]
+  tags = {
+    Name = "${var.team_prefix}_private_subnet_a"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb" = "1"
+  }
+}
+
+resource "aws_subnet" "private_subnet_b" {
+  vpc_id                   = aws_vpc.team_vpc.id
+  cidr_block               = var.private_subnet_cidr_b
+  map_public_ip_on_launch  = false
+  availability_zone        = data.aws_availability_zones.available.names[1]
+  tags = {
+    Name = "${var.team_prefix}_private_subnet_b"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb" = "1"
   }
@@ -35,8 +59,8 @@ resource "aws_security_group" "eks_control_plane_sg" {
   vpc_id      = aws_vpc.team_vpc.id
 
   ingress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -59,9 +83,9 @@ resource "aws_security_group" "eks_nodes_sg" {
   vpc_id      = aws_vpc.team_vpc.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -97,8 +121,13 @@ resource "aws_route_table" "public_route_table" {
   }
 }
 
-resource "aws_route_table_association" "public_route_association" {
-  subnet_id      = aws_subnet.public_subnet.id
+resource "aws_route_table_association" "public_route_association_a" {
+  subnet_id      = aws_subnet.public_subnet_a.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+resource "aws_route_table_association" "public_route_association_b" {
+  subnet_id      = aws_subnet.public_subnet_b.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
@@ -108,7 +137,7 @@ resource "aws_eip" "nat_eip" {
 
 resource "aws_nat_gateway" "nat_gateway" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public_subnet.id
+  subnet_id     = aws_subnet.public_subnet_a.id
   tags = {
     Name = "${var.team_prefix}_nat_gateway"
   }
@@ -127,7 +156,12 @@ resource "aws_route_table" "private_route_table" {
   }
 }
 
-resource "aws_route_table_association" "private_route_association" {
-  subnet_id      = aws_subnet.private_subnet.id
+resource "aws_route_table_association" "private_route_association_a" {
+  subnet_id      = aws_subnet.private_subnet_a.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+resource "aws_route_table_association" "private_route_association_b" {
+  subnet_id      = aws_subnet.private_subnet_b.id
   route_table_id = aws_route_table.private_route_table.id
 }
