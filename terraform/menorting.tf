@@ -32,7 +32,7 @@ resource "helm_release" "grafana" {
   namespace  = "monitoring"
 
   set {
-    name  = "adminPassword"
+    name  = "admin"
     value = var.grafana_admin_password
   }
 
