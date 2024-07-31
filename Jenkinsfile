@@ -69,19 +69,35 @@ pipeline {
                 }
             }
         }
-        stage('Configure Kubeconfig') {
-        steps {
-            script {
-                echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
-                bat """
-                "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
-                echo Kubeconfig configuration done.
-                """
-                env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
-                echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+        stage('Extract EKS Cluster Name') {
+            steps {
+                script {
+                    bat """
+                    cd ${env.TERRAFORM_CONFIG_PATH}
+                    set AWS_PROFILE=orange
+                    for /f "tokens=*" %%i in ('${env.TERRAFORM_EXEC_PATH} output -raw eks_cluster_name') do set EKS_CLUSTER_NAME=%%i
+                    echo EKS Cluster Name is %EKS_CLUSTER_NAME%
+                    """
+                    env.EKS_CLUSTER_NAME = bat(script: "echo %EKS_CLUSTER_NAME%", returnStdout: true).trim()
+                    echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
+                }
             }
         }
-    }
+
+        stage('Configure Kubeconfig') {
+            steps {
+                script {
+                    echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
+                    bat """
+                    "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
+                    echo Kubeconfig configuration done.
+                    """
+                    env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
+                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                }
+            }
+        }
+    
         stage('Build Docker Image') {
             steps {
                 script {
