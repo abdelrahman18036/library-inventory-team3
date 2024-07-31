@@ -7,7 +7,7 @@ pipeline {
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
-        AWS_CLI_PATH = 'D:\\Programs\\aws ac'
+        AWS_CLI_PATH = 'C:\\Program Files\\Amazon\\AWSCLI\\bin\\aws.exe'  // Replace with your actual AWS CLI path
     }
 
     options {
@@ -21,9 +21,9 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         bat """
-                        ${env.AWS_CLI_PATH}\\aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile orange
-                        ${env.AWS_CLI_PATH}\\aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile orange
-                        ${env.AWS_CLI_PATH}\\aws configure set region us-west-1 --profile orange
+                        ${env.AWS_CLI_PATH} configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
+                        ${env.AWS_CLI_PATH} configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
+                        ${env.AWS_CLI_PATH} configure set region us-west-1 --profile orange
                         """
                     }
                 }
@@ -51,7 +51,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Configure Kubeconfig') {
             steps {
                 script {
