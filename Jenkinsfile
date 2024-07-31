@@ -24,7 +24,7 @@ pipeline {
                         bat """
                         ${env.AWS_CLI_PATH} configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
                         ${env.AWS_CLI_PATH} configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
-                        ${env.AWS_CLI_PATH} configure set region us-west-1 --profile orange
+                        ${env.AWS_CLI_PATH} configure set region us-west-2 --profile orange
                         """
                     }
                 }
@@ -52,23 +52,17 @@ pipeline {
                 }
             }
         }
+
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig
-                    try {
-                        kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
-                    } catch (Exception e) {
-                        echo "Kubeconfig output not found in Terraform state."
-                        kubeconfig = ""
-                    }
-
+                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
                     if (kubeconfig) {
                         writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
                         env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
                         echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                     } else {
-                        echo "Skipping Kubernetes deployment due to missing kubeconfig."
+                        error("Kubeconfig output is missing. Cannot proceed with Kubernetes deployment.")
                     }
                 }
             }
@@ -101,16 +95,15 @@ pipeline {
             }
         }
         stage('Deploy to Kubernetes') {
-            when {
-                environment name: 'KUBECONFIG', value: "${env.KUBECONFIG}"
-            }
             steps {
                 script {
-                    echo "Deploying Docker image to Kubernetes"
-                    bat """
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
-                    """
+                    withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
+                        echo "Deploying Docker image to Kubernetes"
+                        bat """
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
+                        """
+                    }
                 }
             }
         }

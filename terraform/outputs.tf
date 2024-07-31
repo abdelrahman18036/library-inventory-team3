@@ -25,3 +25,9 @@ output "private_subnet_id_a" {
 output "private_subnet_id_b" {
   value = aws_subnet.private_subnet_b.id
 }
+
+output "kubeconfig" {
+  value = aws_eks_cluster.library_cluster.endpoint
+  description = "Kubeconfig content"
+}
+
