@@ -1,6 +1,6 @@
 # Set AWS profile and region
 $profile = "orange"
-$region = "us-west-1"
+$region = "us-west-2"
 
 # Check EKS Cluster Status
 aws eks describe-cluster --name team3-library-cluster --region $region --profile $profile
