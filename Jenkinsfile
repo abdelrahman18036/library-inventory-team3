@@ -11,6 +11,8 @@ pipeline {
         KUBECTL_PATH = "${kubectl}"
         NAMESPACE = 'team3'
         TRIVY_PATH = 'D:\\Programs\\trivy'
+        HELM_PATH = 'D:\\Programs\\windows-amd64\\helm.exe'
+
     }
 
     options {
@@ -142,6 +144,22 @@ pipeline {
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\service.yaml -n ${NAMESPACE}
+                            """
+                        }
+                    }
+                }
+                stage('Deploy with Helm') {
+                    steps {
+                        script {
+                            echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
+                            bat """
+                                "${env.HELM_PATH}" repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                                "${env.HELM_PATH}" repo add grafana https://grafana.github.io/helm-charts
+                                "${env.HELM_PATH}" repo update
+                                
+                                "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${var.prometheus_scrape_interval}
+                                
+                                "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${var.grafana_admin_password} --set service.type=LoadBalancer
                             """
                         }
                     }
