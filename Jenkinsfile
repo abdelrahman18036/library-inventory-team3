@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'orange18036/team3-library'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
-        KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
         AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
@@ -52,18 +51,14 @@ pipeline {
                 }
             }
         }
-
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
-                    if (kubeconfig) {
-                        writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
-                        env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
-                        echo "KUBECONFIG is set to ${env.KUBECONFIG}"
-                    } else {
-                        error("Kubeconfig output is missing. Cannot proceed with Kubernetes deployment.")
-                    }
+                    bat """
+                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name <your-cluster-name> --profile orange --kubeconfig ${env.WORKSPACE}\\kubeconfig
+                    """
+                    env.KUBECONFIG = "${env.WORKSPACE}\\kubeconfig"
+                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
         }
@@ -75,7 +70,7 @@ pipeline {
                 }
             }
         }
-         stage('Push Docker Image') {
+        stage('Push Docker Image') {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
@@ -93,15 +88,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
-                        echo "Deploying Docker image to Kubernetes"
-                        bat """
-                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
-                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
-                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
-                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
-                        """
-                    }
+                    echo "Deploying Docker image to Kubernetes"
+                    bat """
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
+                    """
                 }
             }
         }
