@@ -56,36 +56,14 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def clusterEndpoint = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_endpoint", returnStdout: true).trim()
-                    def clusterName = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_name", returnStdout: true).trim()
-                    def certificateAuthorityData = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw certificate_authority_data", returnStdout: true).trim()
-
-                    if (!clusterEndpoint || !clusterName || !certificateAuthorityData) {
-                        error("One or more required kubeconfig outputs are missing. Cannot proceed with Kubernetes deployment.")
+                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
+                    if (kubeconfig) {
+                        writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
+                        env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
+                        echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                    } else {
+                        error("Kubeconfig output is missing. Cannot proceed with Kubernetes deployment.")
                     }
-
-                    def kubeconfigContent = """
-apiVersion: v1
-kind: Config
-clusters:
-- cluster:
-    certificate-authority-data: ${certificateAuthorityData}
-    server: ${clusterEndpoint}
-  name: ${clusterName}
-contexts:
-- context:
-    cluster: ${clusterName}
-    user: ${clusterName}-user
-  name: ${clusterName}
-current-context: ${clusterName}
-users:
-- name: ${clusterName}-user
-  user:
-    token: ${env.AWS_SECRET_ACCESS_KEY}
-"""
-                    writeFile file: "${KUBECONFIG_PATH}", text: kubeconfigContent
-                    env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
-                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
         }
@@ -97,7 +75,7 @@ users:
                 }
             }
         }
-        stage('Push Docker Image') {
+         stage('Push Docker Image') {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
@@ -115,13 +93,15 @@ users:
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Deploying Docker image to Kubernetes"
-                    bat """
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
-                    """
+                    withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
+                        echo "Deploying Docker image to Kubernetes"
+                        bat """
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
+                        """
+                    }
                 }
             }
         }
