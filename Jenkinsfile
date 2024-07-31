@@ -30,48 +30,40 @@ pipeline {
                 }
             }
         }
-        stage('Terraform Init and Apply') {
+        stage('Terraform Init') {
             steps {
                 script {
                     bat """
                     cd ${env.TERRAFORM_CONFIG_PATH}
                     set AWS_PROFILE=orange
                     ${env.TERRAFORM_EXEC_PATH} init
+                    """
+                }
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    bat """
+                    cd ${env.TERRAFORM_CONFIG_PATH}
+                    set AWS_PROFILE=orange
                     ${env.TERRAFORM_EXEC_PATH} apply -auto-approve
                     """
                 }
             }
         }
 
-        stage('Generate Kubeconfig') {
+        stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def cluster_endpoint = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_endpoint", returnStdout: true).trim()
-                    def cluster_name = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_name", returnStdout: true).trim()
-                    def certificate_data = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw certificate_authority_data", returnStdout: true).trim()
-
-                    writeFile file: "${KUBECONFIG_PATH}", text: """
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: ${certificate_data}
-    server: ${cluster_endpoint}
-  name: ${cluster_name}
-contexts:
-- context:
-    cluster: ${cluster_name}
-    user: ${cluster_name}
-  name: ${cluster_name}
-current-context: ${cluster_name}
-kind: Config
-preferences: {}
-users:
-- name: ${cluster_name}
-  user:
-    token: ${env.AWS_ACCESS_KEY_ID}
-"""
-                    env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
-                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
+                    if (kubeconfig) {
+                        writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
+                        env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
+                        echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                    } else {
+                        error("Kubeconfig output is missing. Cannot proceed with Kubernetes deployment.")
+                    }
                 }
             }
         }
@@ -83,31 +75,33 @@ users:
                 }
             }
         }
-        stage('Push Docker Image') {
+         stage('Push Docker Image') {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    // withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    //     bat """
-                    //     docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
-                    //     docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                    //     docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
-                    //     docker push ${DOCKER_IMAGE}:latest
-                    //     """
-                    // }
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        bat """
+                        docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+                        docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                        docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                        docker push ${DOCKER_IMAGE}:latest
+                        """
+                    }
                 }
             }
         }
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
+                    // withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
                         echo "Deploying Docker image to Kubernetes"
                         bat """
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
                         ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
                         ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
                         """
-                    }
+                    // }
                 }
             }
         }
