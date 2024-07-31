@@ -1,15 +1,14 @@
 pipeline {
     agent any
 
-    environment {
+ environment {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
-        AWS_CLI_PATH = 'C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe'  // Replace with your actual AWS CLI path
+        AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'  // Wrapped in quotes
     }
-
     options {
         timeout(time: 1, unit: 'HOURS')
         buildDiscarder(logRotator(numToKeepStr: '10'))
