@@ -1,14 +1,16 @@
 pipeline {
     agent any
 
- environment {
+    environment {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
-        AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'  // Wrapped in quotes
+        AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
+        KUBECTL_PATH = '"C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe"'
     }
+
     options {
         timeout(time: 1, unit: 'HOURS')
         buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -54,10 +56,21 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
-                    writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
-                    env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
-                    echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                    def kubeconfig
+                    try {
+                        kubeconfig = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw kubeconfig", returnStdout: true).trim()
+                    } catch (Exception e) {
+                        echo "Kubeconfig output not found in Terraform state."
+                        kubeconfig = ""
+                    }
+
+                    if (kubeconfig) {
+                        writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
+                        env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
+                        echo "KUBECONFIG is set to ${env.KUBECONFIG}"
+                    } else {
+                        error("Kubeconfig output is missing. Cannot proceed with Kubernetes deployment.")
+                    }
                 }
             }
         }
@@ -95,8 +108,8 @@ pipeline {
                     withKubeConfig([credentialsId: 'kubeconfig-credentials-id', kubeconfig: "${env.KUBECONFIG}"]) {
                         echo "Deploying Docker image to Kubernetes"
                         bat """
-                        ${env.AWS_CLI_PATH}\\kubectl apply -f ${env.WORKSPACE}/k8s/deployment.yaml
-                        ${env.AWS_CLI_PATH}\\kubectl apply -f ${env.WORKSPACE}/k8s/service.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
+                        ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
                         """
                     }
                 }
