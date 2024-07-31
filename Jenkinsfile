@@ -5,10 +5,10 @@ pipeline {
         DOCKER_IMAGE = 'orange18036/team3-library'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_EXEC_PATH = 'terraform'  // Using the environment variable you set
+        TERRAFORM_EXEC_PATH = "${terraform}"  // Using the environment variable you set
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
-        AWS_CLI_PATH = 'aws'  // Using the environment variable you set
-        KUBECTL_PATH = 'kubectl'  // Using the environment variable you set
+        AWS_CLI_PATH = "${aws}"  // Using the environment variable you set
+        KUBECTL_PATH = "${kubectl}"  // Using the environment variable you set
         TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}\\terraform-plugin-cache"
     }
 
