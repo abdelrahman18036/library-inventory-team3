@@ -5,7 +5,8 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_PATH = "${terraform}"  // This will use the environment variable you provided
+        TERRAFORM_EXEC_PATH = "${terraform}"  // Path where Terraform executable is located
+        TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"  // Path to Terraform configuration files
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
     }
@@ -19,27 +20,35 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    sh """
-                    cd ${env.TERRAFORM_PATH}
-                    terraform init
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
+                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
+                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
+                        sh """
+                        cd ${env.TERRAFORM_CONFIG_PATH}
+                        ${env.TERRAFORM_EXEC_PATH}/terraform init
+                        """
+                    }
                 }
             }
         }
         stage('Terraform Apply') {
             steps {
                 script {
-                    sh """
-                    cd ${env.TERRAFORM_PATH}
-                    terraform apply -auto-approve
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', passwordVariable: 'AWS_SECRET_KEY', usernameVariable: 'AWS_ACCESS_KEY')]) {
+                        env.AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY}"
+                        env.AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_KEY}"
+                        sh """
+                        cd ${env.TERRAFORM_CONFIG_PATH}
+                        ${env.TERRAFORM_EXEC_PATH}/terraform apply -auto-approve
+                        """
+                    }
                 }
             }
         }
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def kubeconfig = sh(script: "cd ${env.TERRAFORM_PATH} && terraform output -raw kubeconfig", returnStdout: true).trim()
+                    def kubeconfig = sh(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH}/terraform output -raw kubeconfig", returnStdout: true).trim()
                     writeFile file: "${KUBECONFIG_PATH}", text: kubeconfig
                     env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
@@ -49,8 +58,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
-                    docker.build("${DOCKER_REPO}:${env.BUILD_NUMBER}")
+                    echo "Building Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -66,9 +75,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    echo "Pushing Docker image ${DOCKER_REPO}:${env.BUILD_NUMBER}"
+                    echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                     docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS}") {
-                        docker.image("${DOCKER_REPO}:${env.BUILD_NUMBER}").push()
+                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
                     }
                 }
             }
@@ -93,7 +102,6 @@ pipeline {
             script {
                 echo 'Build, test, and deployment completed successfully.'
             }
-            // Example: Send email notification
             emailext(
                 subject: "SUCCESS: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} succeeded.",
@@ -104,7 +112,6 @@ pipeline {
             script {
                 echo 'Build, test, or deployment failed.'
             }
-            // Example: Send email notification
             emailext(
                 subject: "FAILURE: Jenkins Build ${env.BUILD_NUMBER}",
                 body: "The build ${env.BUILD_NUMBER} failed.",
