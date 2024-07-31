@@ -5,10 +5,10 @@ pipeline {
         DOCKER_IMAGE = 'orange18036/team3-library'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_EXEC_PATH = "${terraform}"  // Using the environment variable you set
+        TERRAFORM_EXEC_PATH = "${terraform}"
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
-        AWS_CLI_PATH = "${aws}"  // Using the environment variable you set
-        KUBECTL_PATH = "${kubectl}"  // Using the environment variable you set
+        AWS_CLI_PATH = "${aws}"
+        KUBECTL_PATH = "${kubectl}"
         TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}\\terraform-plugin-cache"
     }
 
@@ -20,66 +20,38 @@ pipeline {
     stages {
         stage('Setup AWS CLI') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        bat """
-                        "${env.AWS_CLI_PATH}" configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
-                        "${env.AWS_CLI_PATH}" configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
-                        "${env.AWS_CLI_PATH}" configure set region us-west-2 --profile orange
-                        """
-                    }
-                }
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                script {
+                withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     bat """
-                    cd ${env.TERRAFORM_CONFIG_PATH}
-                    set AWS_PROFILE=orange
-                    "${env.TERRAFORM_EXEC_PATH}" init
+                    "${env.AWS_CLI_PATH}" configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
+                    "${env.AWS_CLI_PATH}" configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
+                    "${env.AWS_CLI_PATH}" configure set region us-west-2 --profile orange
                     """
                 }
             }
         }
-        stage('Terraform Apply') {
+
+        stage('Terraform Init and Apply') {
             steps {
-                script {
+                dir("${env.TERRAFORM_CONFIG_PATH}") {
                     bat """
-                    cd ${env.TERRAFORM_CONFIG_PATH}
                     set AWS_PROFILE=orange
+                    "${env.TERRAFORM_EXEC_PATH}" init
                     "${env.TERRAFORM_EXEC_PATH}" apply -auto-approve
                     """
                 }
             }
         }
+
         stage('Extract EKS Cluster Name') {
             steps {
-                script {
-                    def clusterName = bat (
-                        script: """
-                        cd ${env.TERRAFORM_CONFIG_PATH}
+                dir("${env.TERRAFORM_CONFIG_PATH}") {
+                    script {
+                        env.EKS_CLUSTER_NAME = bat(script: """
                         set AWS_PROFILE=orange
                         "${env.TERRAFORM_EXEC_PATH}" output -raw eks_cluster_name
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    env.EKS_CLUSTER_NAME = clusterName
-                    echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
-                }
-            }
-        }
-        stage('Extract EKS Cluster Name') {
-            steps {
-                script {
-                    bat """
-                    cd ${env.TERRAFORM_CONFIG_PATH}
-                    set AWS_PROFILE=orange
-                    for /f "tokens=*" %%i in ('${env.TERRAFORM_EXEC_PATH} output -raw eks_cluster_name') do set EKS_CLUSTER_NAME=%%i
-                    echo EKS Cluster Name is %EKS_CLUSTER_NAME%
-                    """
-                    env.EKS_CLUSTER_NAME = bat(script: "echo %EKS_CLUSTER_NAME%", returnStdout: true).trim()
-                    echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
+                        """, returnStdout: true).trim()
+                        echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
+                    }
                 }
             }
         }
@@ -90,14 +62,13 @@ pipeline {
                     echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
                     bat """
                     "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
-                    echo Kubeconfig configuration done.
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
         }
-    
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -106,6 +77,7 @@ pipeline {
                 }
             }
         }
+
         stage('Push Docker Image') {
             steps {
                 script {
@@ -125,6 +97,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
@@ -142,19 +115,13 @@ pipeline {
 
     post {
         success {
-            script {
-                echo 'Build, test, and deployment completed successfully.'
-            }
+            echo 'Build, test, and deployment completed successfully.'
         }
         failure {
-            script {
-                echo 'Build, test, or deployment failed.'
-            }
+            echo 'Build, test, or deployment failed.'
         }
         always {
-            script {
-                echo 'Cleaning up...'
-            }
+            echo 'Cleaning up...'
         }
     }
 }
