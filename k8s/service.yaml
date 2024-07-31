@@ -4,10 +4,9 @@ metadata:
   name: library-inventory-service
   namespace: team3
 spec:
-  type: NodePort
+  type: LoadBalancer # Changed from NodePort to LoadBalancer
   ports:
     - port: 5000
       targetPort: 5000
-      nodePort: 30000
   selector:
     app: library-inventory
