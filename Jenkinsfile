@@ -9,7 +9,7 @@ pipeline {
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
         AWS_CLI_PATH = "${aws}"
         KUBECTL_PATH = "${kubectl}"
-        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}\\terraform-plugin-cache"
+        NAMESPACE = 'team3'
     }
 
     options {
@@ -102,12 +102,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Deploying Docker image to Kubernetes"
+                    echo "Deploying to Kubernetes namespace: ${NAMESPACE}"
                     bat """
-                    "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume.yaml
-                    "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml
-                    "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml
-                    "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\service.yaml
+                        "${env.KUBECTL_PATH}" create namespace ${NAMESPACE} --dry-run=client -o yaml | "${env.KUBECTL_PATH}" apply -f -
+                        "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume.yaml -n ${NAMESPACE}
+                        "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml -n ${NAMESPACE}
+                        "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml -n ${NAMESPACE}
+                        "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\service.yaml -n ${NAMESPACE}
                     """
                 }
             }
