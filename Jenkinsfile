@@ -7,7 +7,7 @@ pipeline {
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
-        AWS_CLI_PATH = 'C:\\Program Files\\Amazon\\AWSCLI\\bin\\aws.exe'  // Replace with your actual AWS CLI path
+        AWS_CLI_PATH = 'D:\\Programs\\aws ac\\eksctl.exe'  // Replace with your actual AWS CLI path
     }
 
     options {
