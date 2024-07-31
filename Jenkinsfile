@@ -6,7 +6,7 @@ pipeline {
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
-        TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
+        TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
         AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
         KUBECTL_PATH = '"C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe"'
     }
@@ -52,15 +52,13 @@ pipeline {
                 }
             }
         }
-
         stage('Configure Kubeconfig') {
             steps {
                 script {
-                    def clusterName = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_name", returnStdout: true).trim()
                     bat """
-                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${clusterName} --kubeconfig ${env.WORKSPACE}\\kubeconfig --profile orange
+                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${aws_eks_cluster.library_cluster.name} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
                     """
-                    env.KUBECONFIG = "${env.WORKSPACE}\\kubeconfig"
+                    env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
@@ -79,6 +77,7 @@ pipeline {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                     // withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     //     bat """
+                    //     echo Logging into Docker Hub...
                     //     docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
                     //     docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
                     //     docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
@@ -93,10 +92,10 @@ pipeline {
                 script {
                     echo "Deploying Docker image to Kubernetes"
                     bat """
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\persistent-volume.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml
+                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\service.yaml
                     """
                 }
             }
