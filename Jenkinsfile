@@ -71,8 +71,10 @@ pipeline {
         stage('Configure Kubeconfig') {
             steps {
                 script {
+                    echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
                     bat """
-                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${env.EKS_CLUSTER_NAME} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
+                    "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name ${env.EKS_CLUSTER_NAME} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
+                    echo Kubeconfig configuration done.
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
