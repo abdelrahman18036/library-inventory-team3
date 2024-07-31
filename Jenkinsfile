@@ -52,11 +52,27 @@ pipeline {
                 }
             }
         }
+        stage('Extract EKS Cluster Name') {
+            steps {
+                script {
+                    def clusterName = bat (
+                        script: """
+                        cd ${env.TERRAFORM_CONFIG_PATH}
+                        set AWS_PROFILE=orange
+                        ${env.TERRAFORM_EXEC_PATH} output -raw eks_cluster_name
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    env.EKS_CLUSTER_NAME = clusterName
+                    echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
+                }
+            }
+        }
         stage('Configure Kubeconfig') {
             steps {
                 script {
                     bat """
-                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${aws_eks_cluster.library_cluster.name} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
+                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${env.EKS_CLUSTER_NAME} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
@@ -75,15 +91,18 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    // withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    //     bat """
-                    //     echo Logging into Docker Hub...
-                    //     docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
-                    //     docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                    //     docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
-                    //     docker push ${DOCKER_IMAGE}:latest
-                    //     """
-                    // }
+                    // Uncomment the following block if you want to push the image to Docker Hub
+                    /*
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        bat """
+                        echo Logging into Docker Hub...
+                        docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+                        docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                        docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                        docker push ${DOCKER_IMAGE}:latest
+                        """
+                    }
+                    */
                 }
             }
         }
