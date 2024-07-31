@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'orange18036/team3-library'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
+        KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"
         AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
@@ -51,11 +52,13 @@ pipeline {
                 }
             }
         }
+
         stage('Configure Kubeconfig') {
             steps {
                 script {
+                    def clusterName = bat(script: "cd ${env.TERRAFORM_CONFIG_PATH} && ${env.TERRAFORM_EXEC_PATH} output -raw cluster_name", returnStdout: true).trim()
                     bat """
-                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name <your-cluster-name> --profile orange --kubeconfig ${env.WORKSPACE}\\kubeconfig
+                    ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name ${clusterName} --kubeconfig ${env.WORKSPACE}\\kubeconfig --profile orange
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\kubeconfig"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
