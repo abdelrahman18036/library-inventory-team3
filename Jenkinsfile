@@ -7,8 +7,9 @@ pipeline {
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
-        AWS_CLI_PATH = '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe"'
-        KUBECTL_PATH = '"C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe"'
+        AWS_CLI_PATH = 'C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe'
+        KUBECTL_PATH = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\kubectl.exe'
+        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}\\terraform-plugin-cache"
     }
 
     options {
@@ -22,9 +23,9 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         bat """
-                        ${env.AWS_CLI_PATH} configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
-                        ${env.AWS_CLI_PATH} configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
-                        ${env.AWS_CLI_PATH} configure set region us-west-2 --profile orange
+                        "${env.AWS_CLI_PATH}" configure set aws_access_key_id %AWS_ACCESS_KEY_ID% --profile orange
+                        "${env.AWS_CLI_PATH}" configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY% --profile orange
+                        "${env.AWS_CLI_PATH}" configure set region us-west-2 --profile orange
                         """
                     }
                 }
@@ -34,9 +35,9 @@ pipeline {
             steps {
                 script {
                     bat """
-                    cd ${env.TERRAFORM_CONFIG_PATH}
+                    cd "${env.TERRAFORM_CONFIG_PATH}"
                     set AWS_PROFILE=orange
-                    ${env.TERRAFORM_EXEC_PATH} init
+                    "${env.TERRAFORM_EXEC_PATH}" init
                     """
                 }
             }
@@ -45,9 +46,9 @@ pipeline {
             steps {
                 script {
                     bat """
-                    cd ${env.TERRAFORM_CONFIG_PATH}
+                    cd "${env.TERRAFORM_CONFIG_PATH}"
                     set AWS_PROFILE=orange
-                    ${env.TERRAFORM_EXEC_PATH} apply -auto-approve
+                    "${env.TERRAFORM_EXEC_PATH}" apply -auto-approve
                     """
                 }
             }
@@ -57,9 +58,9 @@ pipeline {
                 script {
                     def clusterName = bat (
                         script: """
-                        cd ${env.TERRAFORM_CONFIG_PATH}
+                        cd "${env.TERRAFORM_CONFIG_PATH}"
                         set AWS_PROFILE=orange
-                        ${env.TERRAFORM_EXEC_PATH} output -raw eks_cluster_name
+                        "${env.TERRAFORM_EXEC_PATH}" output -raw eks_cluster_name
                         """,
                         returnStdout: true
                     ).trim()
@@ -73,7 +74,7 @@ pipeline {
                 script {
                     echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
                     bat """
-                    "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name ${env.EKS_CLUSTER_NAME} --kubeconfig ${env.WORKSPACE}\\${KUBECONFIG_PATH} --profile orange
+                    "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name ${env.EKS_CLUSTER_NAME} --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
                     echo Kubeconfig configuration done.
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
@@ -113,10 +114,10 @@ pipeline {
                 script {
                     echo "Deploying Docker image to Kubernetes"
                     bat """
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\persistent-volume.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml
-                    ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}\\k8s\\service.yaml
+                    "${env.KUBECTL_PATH}" apply -f "${env.WORKSPACE}\\k8s\\persistent-volume.yaml"
+                    "${env.KUBECTL_PATH}" apply -f "${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml"
+                    "${env.KUBECTL_PATH}" apply -f "${env.WORKSPACE}\\k8s\\deployment.yaml"
+                    "${env.KUBECTL_PATH}" apply -f "${env.WORKSPACE}\\k8s\\service.yaml"
                     """
                 }
             }
