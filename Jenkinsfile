@@ -44,11 +44,11 @@ pipeline {
 
         stage('Extract EKS Cluster Name') {
             steps {
-                dir("${env.TERRAFORM_CONFIG_PATH}") {
-                    script {
+                script {
+                    dir("${env.TERRAFORM_CONFIG_PATH}") {
                         env.EKS_CLUSTER_NAME = bat(script: """
-                        set AWS_PROFILE=orange
-                        "${env.TERRAFORM_EXEC_PATH}" output -raw eks_cluster_name
+                            @echo off
+                            "${env.TERRAFORM_EXEC_PATH}" output -raw eks_cluster_name
                         """, returnStdout: true).trim()
                         echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
                     }
@@ -61,13 +61,14 @@ pipeline {
                 script {
                     echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
                     bat """
-                    "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
+                        "${env.AWS_CLI_PATH}" eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}\\${KUBECONFIG_PATH}" --profile orange
                     """
                     env.KUBECONFIG = "${env.WORKSPACE}\\${KUBECONFIG_PATH}"
                     echo "KUBECONFIG is set to ${env.KUBECONFIG}"
                 }
             }
         }
+
 
         stage('Build Docker Image') {
             steps {
