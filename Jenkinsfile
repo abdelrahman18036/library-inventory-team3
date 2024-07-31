@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'my-python-app'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
-        TERRAFORM_EXEC_PATH = "${terraform}"  // Path to Terraform executable
+        TERRAFORM_EXEC_PATH = 'D:\\Programs\\teraform\\terraform.exe'  // Corrected Path to Terraform executable
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}/terraform"  // Path to Terraform config files
         AWS_CLI_PATH = 'D:\\Programs\\aws ac'  // Path to AWS CLI directory
     }
