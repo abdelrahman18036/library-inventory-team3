@@ -84,26 +84,35 @@ This project is a comprehensive Library Inventory System designed to manage book
 
 ### Prerequisites
 
-- **Python 3.10+**: Required for running the Flask web application.
-- **Docker**: To containerize and run the application.
-- **Kubernetes**: For deploying the application in a clustered environment.
-- **Terraform**: To provision AWS infrastructure, including an EKS cluster.
-- **AWS CLI**: To interact with AWS services.
-- **Jenkins**: For setting up CI/CD pipelines.
+- **Python 3.10+**: Required for running the Flask web application. Ensure that you have Python 3.10 or higher installed to support all dependencies.
+
+- **Docker**: Used to containerize the application. Docker simplifies the deployment process by packaging the application and its dependencies into a single container image.
+
+- **Kubernetes**: For deploying the application in a clustered environment. Kubernetes manages containerized applications across a cluster of machines, ensuring high availability and scalability.
+
+- **Terraform**: To provision and manage AWS infrastructure, including setting up an EKS (Elastic Kubernetes Service) cluster. Terraform enables infrastructure as code, allowing for automated and consistent provisioning.
+
+- **AWS CLI**: Required for interacting with AWS services. The AWS CLI allows you to manage AWS resources directly from the command line.
+
+- **Jenkins**: For setting up and managing CI/CD pipelines. Jenkins automates the build, test, and deployment processes, facilitating continuous integration and continuous deployment.
+
+- **Prometheus**: Used for monitoring and alerting. Prometheus collects metrics from configured endpoints and stores them in a time-series database, providing powerful querying capabilities and alerting.
+
+- **Grafana**: For visualizing metrics collected by Prometheus. Grafana provides a rich set of visualization options for creating dashboards and monitoring the application's performance.
 
 ### Installation
 
 1. **Clone the repository**:
 
-   ```bash
+   bash
    git clone https://github.com/yourusername/library-inventory-system.git
    cd library-inventory-system
-   ```
+   
 
 2. **Install Python dependencies**:
-   ```bash
+   bash
    pip install -r requirements.txt
-   ```
+   
 
 ## Usage
 
@@ -111,9 +120,9 @@ This project is a comprehensive Library Inventory System designed to manage book
 
 1. **Start the Flask application**:
 
-   ```bash
+   bash
    python app.py
-   ```
+   
 
 2. **Access the application**:
    Open your browser and navigate to `http://localhost:5000`.
@@ -124,15 +133,15 @@ This project is a comprehensive Library Inventory System designed to manage book
 
 1. **Build the Docker image**:
 
-   ```bash
+   bash
    docker build -t library-inventory .
-   ```
+   
 
 2. **Run the Docker container**:
 
-   ```bash
+   bash
    docker-compose up
-   ```
+   
 
 3. **Access the application**:
    Open your browser and navigate to `http://localhost:5000`.
@@ -141,47 +150,47 @@ This project is a comprehensive Library Inventory System designed to manage book
 
 1. **Deploy the application on Kubernetes**:
 
-   ```bash
+   bash
    kubectl apply -f k8s/deployment.yaml
    kubectl apply -f k8s/service.yaml
    kubectl apply -f k8s/ingress.yaml
    kubectl apply -f k8s/persistent-volume.yaml
    kubectl apply -f k8s/persistent-volume-claim.yaml
-   ```
+   
 
 2. **Deploy Prometheus and AlertManager**:
 
-   ```bash
+   bash
    kubectl apply -f k8s/prometheus-server-service.yaml
    kubectl apply -f k8s/pv-prometheus-alertmanager.yaml
    kubectl apply -f k8s/alert-rules.yml
-   ```
+   
 
 3. **Check the status of your Kubernetes resources**:
 
-   ```bash
+   bash
    kubectl get all -n team3
-   ```
+   
 
 4. **Access Prometheus**:
    Access Prometheus via the LoadBalancer IP or DNS:
-   ```url
+   url
    http://<LoadBalancer-IP>:9090
-   ```
+   
 
 ### Terraform
 
 1. **Initialize Terraform**:
 
-   ```bash
+   bash
    cd terraform
    terraform init
-   ```
+   
 
 2. **Apply the Terraform configuration**:
-   ```bash
+   bash
    terraform apply
-   ```
+   
 
 This will set up the necessary infrastructure on AWS, including an EKS cluster for deploying the application.
 
@@ -203,7 +212,7 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
 
    The `Jenkinsfile` is designed to automate the build, test, and deployment process. Below is a high-level overview of the stages:
 
-   ```groovy
+   groovy
    pipeline {
        agent any
 
@@ -222,7 +231,7 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
            PROMETHEUS_SCRAPE_INTERVAL = '30s'
        }
    }
-   ```
+   
 
    **Pipeline Stages**:
 
@@ -241,21 +250,21 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
 
 1. **Deploy Prometheus using the provided configurations**:
 
-   ```bash
+   bash
    kubectl apply -f k8s/prometheus-server-service.yaml
-   ```
+   
 
 2. **Access Prometheus**:
    Access Prometheus via the LoadBalancer IP or DNS:
-   ```url
+   url
    http://<LoadBalancer-IP>:9090
-   ```
+   
 
 ### Creating Alerts
 
 1. **Edit `alert-rules.yml` to define alerting rules**:
 
-   ```yaml
+   yaml
    groups:
      - name: example
        rules:
@@ -267,13 +276,13 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
            annotations:
              summary: "Instance {{ $labels.instance }} down"
              description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."
-   ```
+   
 
 2. **Apply the updated ConfigMap**:
-   ```bash
+   bash
    kubectl create configmap prometheus-server --from-file=alert-rules.yml --from-file=prometheus.yml -n team3 --dry-run=client -o yaml | kubectl apply -f -
    ``
-   ```
+   
 
 `
 
