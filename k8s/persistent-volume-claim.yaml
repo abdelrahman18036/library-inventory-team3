@@ -9,3 +9,4 @@ spec:
   resources:
     requests:
       storage: 5Gi
+  storageClassName: "" # Ensure this is set to match the PV's StorageClass or left empty for direct binding
