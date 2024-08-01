@@ -145,6 +145,9 @@ pipeline {
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\service.yaml -n ${NAMESPACE}
+                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus-server-service.yaml -n ${NAMESPACE}
+                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\pv-prometheus-alertmanager.yaml -n ${NAMESPACE}
+
                             """
                         }
                     }
