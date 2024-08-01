@@ -1,20 +1,34 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8-slim
+# Stage 1: Build Stage
+FROM python:3.8-alpine AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Install build dependencies
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy and install dependencies to a specific directory
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+# Stage 2: Production Stage
+FROM python:3.8-alpine
+
+WORKDIR /app
+
+# Install runtime dependencies (if needed)
+RUN apk add --no-cache libffi
+
+# Copy only the installed dependencies from the builder stage
+COPY --from=builder /install /usr/local
+
+# Copy the application code from the local directory to the container
+COPY . .
 
 # Define environment variable
-ENV NAME World
+ENV NAME=World
 
-# Run app.py when the container launches
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# Expose port 5000
+EXPOSE 5000
+
+# Run the application using Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "4", "app:app"]
