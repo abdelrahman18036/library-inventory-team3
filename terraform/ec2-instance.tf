@@ -1,6 +1,6 @@
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami           = "ami-0d8f6eb4f641ef691"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  ami           = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
   instance_type = "t3.micro"
   key_name      = "orange"  # Name of your key pair
 
