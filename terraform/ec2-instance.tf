@@ -1,11 +1,38 @@
+# Security Group for EC2 Instance
+resource "aws_security_group" "public_ec2_sg" {
+  name        = "${var.team_prefix}_public_ec2_sg"
+  description = "Security group for the public EC2 instance"
+  vpc_id      = aws_vpc.team_vpc.id
+
+  # Allow SSH access only from a specific IP range (e.g., your home/office IP)
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address in CIDR notation
+  }
+
+  # Allow outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.team_prefix}_public_ec2_sg"
+  }
+}
+
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami           = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  ami           = "ami-0d8f6eb4f641ef691"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
   instance_type = "t3.micro"
   key_name      = "orange"  # Name of your key pair
 
-  # Security Group to allow SSH access
-  vpc_security_group_ids = [aws_security_group.eks_nodes_sg.id]
+  # Use the newly created security group
+  vpc_security_group_ids = [aws_security_group.public_ec2_sg.id]
   subnet_id              = aws_subnet.public_subnet_a.id  # Launch in the first public subnet
 
   tags = {
