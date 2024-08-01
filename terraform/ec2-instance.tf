@@ -9,7 +9,7 @@ resource "aws_security_group" "public_ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/32"]  # Replace with your IP address in CIDR notation
+    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address in CIDR notation
   }
 
   # Allow outbound traffic
@@ -27,12 +27,14 @@ resource "aws_security_group" "public_ec2_sg" {
 
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami           = "ami-0aff18ec83b712f05"  
-  instance_type = "t3.micro"
-  key_name      = "orange"  
+  ami                    = "ami-0d8f6eb4f641ef691"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  instance_type          = "t3.micro"
+  key_name               = "orange"  # Name of your key pair
+  associate_public_ip_address = true  # Auto-assign public IP
 
+  # Use the newly created security group
   vpc_security_group_ids = [aws_security_group.public_ec2_sg.id]
-  subnet_id              = aws_subnet.public_subnet_a.id 
+  subnet_id              = aws_subnet.public_subnet_a.id  # Launch in the first public subnet
 
   tags = {
     Name = "${var.team_prefix}_public_ec2"
@@ -89,6 +91,7 @@ resource "aws_instance" "public_ec2" {
   EOF
 }
 
+# Output the EC2 instance details
 output "public_ec2_instance_id" {
   value       = aws_instance.public_ec2.id
   description = "The ID of the public EC2 instance"
