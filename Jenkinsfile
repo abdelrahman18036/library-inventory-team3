@@ -12,6 +12,7 @@ pipeline {
         NAMESPACE = 'team3'
         TRIVY_PATH = 'D:\\Programs\\trivy'
         HELM_PATH = 'D:\\Programs\\windows-amd64\\helm.exe'
+        GRAFANA_ADMIN_PASSWORD = 'admin'
 
     }
 
@@ -148,7 +149,7 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy with Helm') {
+                 stage('Deploy with Helm') {
                     steps {
                         script {
                             echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
@@ -157,9 +158,9 @@ pipeline {
                                 "${env.HELM_PATH}" repo add grafana https://grafana.github.io/helm-charts
                                 "${env.HELM_PATH}" repo update
                                 
-                                "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${var.prometheus_scrape_interval}
+                                "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
                                 
-                                "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${var.grafana_admin_password} --set service.type=LoadBalancer
+                                "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
                             """
                         }
                     }
