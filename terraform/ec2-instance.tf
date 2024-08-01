@@ -35,7 +35,7 @@ resource "aws_security_group" "public_ec2_sg" {
 
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami                    = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  ami                    = "ami-0aff18ec83b712f05"  
   instance_type          = "t3.micro"
   key_name               = "orange"  # Name of your key pair
   associate_public_ip_address = true  # Auto-assign public IP
