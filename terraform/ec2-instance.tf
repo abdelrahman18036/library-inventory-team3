@@ -4,12 +4,20 @@ resource "aws_security_group" "public_ec2_sg" {
   description = "Security group for the public EC2 instance"
   vpc_id      = aws_vpc.team_vpc.id
 
-  # Allow SSH access only from a specific IP range (e.g., your home/office IP)
+  # Allow SSH access from anywhere
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address in CIDR notation
+    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address in CIDR notation for better security
+  }
+
+  # Allow HTTP access on port 8080
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Allows traffic from any IP. Consider restricting it if necessary.
   }
 
   # Allow outbound traffic
@@ -88,6 +96,14 @@ resource "aws_instance" "public_ec2" {
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo chmod +x ./kubectl
     sudo mv ./kubectl /usr/local/bin/kubectl
+
+    # Write paths to a file
+    echo "Terraform: $(which terraform)" > /home/ubuntu/tool_paths.txt
+    echo "AWS CLI: $(which aws)" >> /home/ubuntu/tool_paths.txt
+    echo "kubectl: $(which kubectl)" >> /home/ubuntu/tool_paths.txt
+    echo "Trivy: $(which trivy)" >> /home/ubuntu/tool_paths.txt
+    echo "Helm: $(which helm)" >> /home/ubuntu/tool_paths.txt
+    echo "Jenkins: $(which jenkins)" >> /home/ubuntu/tool_paths.txt
   EOF
 }
 
