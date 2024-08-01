@@ -6,8 +6,13 @@
     <h2>Return Book</h2>
     <form method="POST" action="{{ url_for('return_book') }}">
       <div class="form-group">
-        <label for="title">Title</label>
-        <input type="text" class="form-control" id="title" name="title" required>
+        <label for="title">Select Book</label>
+        <select class="form-control" id="title" name="title" required>
+          <option value="" disabled selected>Select a borrowed book</option>
+          {% for book in borrowed_books %}
+            <option value="{{ book.title }}">{{ book.title }} by {{ book.author }}</option>
+          {% endfor %}
+        </select>
       </div>
       <button type="submit" class="btn btn-primary">Return Book</button>
     </form>

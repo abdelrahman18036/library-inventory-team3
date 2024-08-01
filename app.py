@@ -94,41 +94,51 @@ def search_book():
 @app.route('/borrow_book', methods=['GET', 'POST'])
 def borrow_book():
     """Handle borrowing books."""
+    data = load_data()
+    
     if request.method == 'POST':
         title = request.form['title']
         borrower = request.form['borrower']
         if not title or not borrower:
             flash('Title and borrower are required!')
             return redirect(url_for('borrow_book'))
-        data = load_data()
+        
         book = next((book for book in data['books'] if book['title'] == title), None)
         if not book:
             abort(404, description="Book not found")
+        
         data['books'].remove(book)
-        data['borrowed_books'].append({"title": title, "borrower": borrower})
+        data['borrowed_books'].append({"title": title, "author": book['author'], "borrower": borrower})
         save_data(data)
         flash('Book borrowed successfully!')
         return redirect(url_for('index'))
-    return render_template('borrow_book.html')
+    
+    available_books = [book for book in data['books']]
+    return render_template('borrow_book.html', books=available_books)
 
 @app.route('/return_book', methods=['GET', 'POST'])
 def return_book():
     """Handle returning borrowed books."""
+    data = load_data()
+    borrowed_books = [book for book in data['borrowed_books']]
+    
     if request.method == 'POST':
         title = request.form['title']
         if not title:
             flash('Title is required!')
             return redirect(url_for('return_book'))
-        data = load_data()
-        borrowed_book = next((book for book in data['borrowed_books'] if book['title'] == title), None)
+        
+        borrowed_book = next((book for book in borrowed_books if book['title'] == title), None)
         if not borrowed_book:
             abort(404, description="Borrowed book not found")
+        
         data['borrowed_books'].remove(borrowed_book)
-        data['books'].append({"title": title, "author": borrowed_book.get('author', 'Unknown')})
+        data['books'].append({"title": title, "author": borrowed_book['author']})
         save_data(data)
         flash('Book returned successfully!')
         return redirect(url_for('index'))
-    return render_template('return_book.html')
+    
+    return render_template('return_book.html', borrowed_books=borrowed_books)
 
 @app.errorhandler(404)
 def page_not_found(e):
