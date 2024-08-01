@@ -13,7 +13,7 @@ pipeline {
         TRIVY_PATH = 'D:\\Programs\\trivy'
         HELM_PATH = 'D:\\Programs\\windows-amd64\\helm.exe'
         GRAFANA_ADMIN_PASSWORD = 'admin'
-
+        PROMETHEUS_SCRAPE_INTERVAL = '30s'
     }
 
     options {
