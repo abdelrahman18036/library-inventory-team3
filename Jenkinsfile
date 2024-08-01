@@ -10,8 +10,8 @@ pipeline {
         AWS_CLI_PATH = "${aws}"
         KUBECTL_PATH = "${kubectl}"
         NAMESPACE = 'team3'
-        TRIVY_PATH = 'D:\\Programs\\trivy'
-        HELM_PATH = 'D:\\Programs\\windows-amd64\\helm.exe'
+        TRIVY_PATH = "${trivy}"
+        HELM_PATH = "${helm}"
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
     }
