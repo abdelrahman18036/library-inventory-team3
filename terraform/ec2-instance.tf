@@ -9,7 +9,7 @@ resource "aws_security_group" "public_ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address in CIDR notation
+    cidr_blocks = ["0.0.0.0/32"]  # Replace with your IP address in CIDR notation
   }
 
   # Allow outbound traffic
@@ -27,13 +27,12 @@ resource "aws_security_group" "public_ec2_sg" {
 
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami           = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  ami           = "ami-0aff18ec83b712f05"  
   instance_type = "t3.micro"
-  key_name      = "orange"  # Name of your key pair
+  key_name      = "orange"  
 
-  # Use the newly created security group
   vpc_security_group_ids = [aws_security_group.public_ec2_sg.id]
-  subnet_id              = aws_subnet.public_subnet_a.id  # Launch in the first public subnet
+  subnet_id              = aws_subnet.public_subnet_a.id 
 
   tags = {
     Name = "${var.team_prefix}_public_ec2"
@@ -44,10 +43,31 @@ resource "aws_instance" "public_ec2" {
     #!/bin/bash
     sudo apt-get update -y
     sudo apt-get upgrade -y
-    
+
     # Install AWS CLI
-    sudo apt-get install -y awscli
-    
+    sudo apt-get install -y unzip
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+
+    # Install wget and Trivy
+    sudo apt-get install wget -y
+    wget https://github.com/aquasecurity/trivy/releases/download/v0.42.0/trivy_0.42.0_Linux-64bit.deb
+    sudo dpkg -i trivy_0.42.0_Linux-64bit.deb
+
+    # Install Helm
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    # Install Jenkins
+    sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y fontconfig openjdk-17-jre jenkins
+
+    # Enable and start Jenkins
+    sudo systemctl enable jenkins
+    sudo systemctl start jenkins
+
     # Install Terraform
     sudo apt-get install -y gnupg software-properties-common curl
     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
@@ -69,7 +89,6 @@ resource "aws_instance" "public_ec2" {
   EOF
 }
 
-# Output the EC2 instance details
 output "public_ec2_instance_id" {
   value       = aws_instance.public_ec2.id
   description = "The ID of the public EC2 instance"
