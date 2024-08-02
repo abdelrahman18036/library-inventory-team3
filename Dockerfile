@@ -10,7 +10,7 @@ RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Stage 2: Production Stage
+# Stage 2: Production Stages
 FROM python:3.8-alpine
 
 WORKDIR /app
