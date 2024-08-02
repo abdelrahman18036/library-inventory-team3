@@ -73,7 +73,7 @@ variable "eks_node_role_name" {
 variable "eks_node_instance_type" {
   description = "The instance type for EKS nodes."
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "eks_node_min_size" {
@@ -104,4 +104,9 @@ variable "prometheus_scrape_interval" {
   description = "The global scrape interval for Prometheus"
   type        = string
   default     = "15s"
+}
+
+variable "manage_ec2" {
+  description = "Set to false to prevent managing the EC2 instance"
+  default     = true
 }
