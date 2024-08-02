@@ -75,7 +75,7 @@ pipeline {
                                 export AWS_PROFILE=orange
                                 ${TERRAFORM_EXEC_PATH} init
                             """
-                            // ${TERRAFORM_EXEC_PATH} apply -auto-approve
+                            // ${TERRAFORM_EXEC_PATH} apply -var="manage_ec2=false" -auto-approve
 
                         }
                     }
@@ -146,13 +146,14 @@ pipeline {
                     steps {
                         script {
                             echo "Deploying to Kubernetes namespace: ${NAMESPACE}"
-                            sh """
-                                ${KUBECTL_PATH} create namespace ${NAMESPACE} --dry-run=client -o yaml | ${KUBECTL_PATH} apply -f -
-                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml -n ${NAMESPACE}
-                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml -n ${NAMESPACE}
-                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml -n ${NAMESPACE}
-                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml -n ${NAMESPACE}
-                            """
+                            echo "Deploying Done"
+                            // sh """
+                            //     ${KUBECTL_PATH} create namespace ${NAMESPACE} --dry-run=client -o yaml | ${KUBECTL_PATH} apply -f -
+                            //     ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml -n ${NAMESPACE}
+                            //     ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml -n ${NAMESPACE}
+                            //     ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml -n ${NAMESPACE}
+                            //     ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml -n ${NAMESPACE}
+                            // """
                         }
                     }
                 }

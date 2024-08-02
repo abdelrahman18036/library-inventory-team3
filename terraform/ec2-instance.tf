@@ -35,21 +35,24 @@ resource "aws_security_group" "public_ec2_sg" {
 
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami                    = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
+  count = var.manage_ec2 ? 1 : 0
+  ami                    = "ami-0aff18ec83b712f05"
   instance_type          = "t3.micro"
-  key_name               = "orange"  # Name of your key pair
-  associate_public_ip_address = true  # Auto-assign public IP
+  key_name               = "orange"
+  associate_public_ip_address = true
 
   root_block_device {
-    volume_size = 20  # 20 GiB
+    volume_size = 20
   }
-  # Use the newly created security group
+
   vpc_security_group_ids = [aws_security_group.public_ec2_sg.id]
-  subnet_id              = aws_subnet.public_subnet_a.id  # Launch in the first public subnet
+  subnet_id              = aws_subnet.public_subnet_a.id
 
   tags = {
-    Name = "${var.team_prefix}_public_ec2"
+    Name        = "${var.team_prefix}_public_ec2"
+    Environment = "protected"
   }
+
 
   # User Data to install necessary software
   user_data = <<-EOF
