@@ -137,23 +137,20 @@ pipeline {
                     }
                 }
 
-                stage('Push Docker Image to GHCR') {
+                stage('Push Docker Image to GitHub Container Registry') {
                     steps {
                         script {
-                            echo "Pushing Docker image ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER} to GitHub Container Registry"
                             withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                 bat """
-                                echo Logging into GitHub Container Registry...
-                                echo %GITHUB_TOKEN% | docker login ghcr.io -u abdelrahman18036 --password-stdin
-                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
-                                docker push ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
+                                echo ${env.GITHUB_TOKEN} | docker login ghcr.io -u abdelrahman18036 --password-stdin
+                                docker push ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
                                 """
                             }
                         }
                     }
                 }
 
-                
 
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
