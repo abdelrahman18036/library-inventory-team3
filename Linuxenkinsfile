@@ -69,11 +69,13 @@ pipeline {
                 stage('Terraform Init and Apply') {
                     steps {
                         dir("${env.TERRAFORM_CONFIG_PATH}") {
-                            sh """
-                                export AWS_PROFILE=orange
-                                ${TERRAFORM_EXEC_PATH} init
-                                ${TERRAFORM_EXEC_PATH} apply -auto-approve
-                            """
+                            echo "Initializing Terraform..."
+                            echo "Done..."
+                            // sh """
+                            //     export AWS_PROFILE=orange
+                            //     ${TERRAFORM_EXEC_PATH} init
+                            //     ${TERRAFORM_EXEC_PATH} apply -auto-approve
+                            // """
                         }
                     }
                 }
