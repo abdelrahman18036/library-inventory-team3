@@ -31,4 +31,4 @@ ENV NAME=World
 EXPOSE 5000
 
 # Run the application using Gunicorn with reduced workers and threads
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000",  "app:app"]
