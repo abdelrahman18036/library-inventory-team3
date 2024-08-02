@@ -8,6 +8,7 @@ pipeline {
         TERRAFORM_EXEC_PATH = "${terraform}"
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
         AWS_CLI_PATH = "${aws}"
+        GIT_CREDENTIAL_ID = 'githubaccess'
         KUBECTL_PATH = "${kubectl}"
         NAMESPACE = 'team3'
         TRIVY_PATH = "${trivy}"
@@ -155,7 +156,7 @@ pipeline {
                 }
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
-                        sshagent(credentials: ['github-ssh-key']) {
+                        sshagent(credentials: [GIT_CREDENTIAL_ID]) {
                             bat """
                                 git config --global user.email "abdelrahman.18036@gmail.com"
                                 git config --global user.name "abdelrahman18036"
