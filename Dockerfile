@@ -24,11 +24,11 @@ COPY --from=builder /install /usr/local
 # Copy the application code from the local directory to the container
 COPY . .
 
-# Define environment variable
-ENV NAME=World
-
 # Expose port 5000
 EXPOSE 5000
+
+# Set the working directory
+LABEL org.opencontainers.image.source https://github.com/abdelrahman18036/library-inventory-team3
 
 # Run the application using Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
