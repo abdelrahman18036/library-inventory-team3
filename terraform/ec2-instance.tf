@@ -40,6 +40,9 @@ resource "aws_instance" "public_ec2" {
   key_name               = "orange"  # Name of your key pair
   associate_public_ip_address = true  # Auto-assign public IP
 
+  root_block_device {
+    volume_size = 20  # 20 GiB
+  }
   # Use the newly created security group
   vpc_security_group_ids = [aws_security_group.public_ec2_sg.id]
   subnet_id              = aws_subnet.public_subnet_a.id  # Launch in the first public subnet
@@ -145,12 +148,12 @@ resource "aws_instance" "public_ec2" {
     sudo systemctl restart jenkins
 
     # Write paths to a file
-    echo "Terraform: \$(which terraform)" > /home/ubuntu/tool_paths.txt
-    echo "AWS CLI: \$(which aws)" >> /home/ubuntu/tool_paths.txt
-    echo "kubectl: \$(which kubectl)" >> /home/ubuntu/tool_paths.txt
-    echo "Trivy: \$(which trivy)" >> /home/ubuntu/tool_paths.txt
-    echo "Helm: \$(which helm)" >> /home/ubuntu/tool_paths.txt
-    echo "Jenkins: \$(which jenkins)" >> /home/ubuntu/tool_paths.txt
+    echo "Terraform: \$(sudo which terraform)" > /home/ubuntu/tool_paths.txt
+    echo "AWS CLI: \$(sudo which aws)" >> /home/ubuntu/tool_paths.txt
+    echo "kubectl: \$(sudo which kubectl)" >> /home/ubuntu/tool_paths.txt
+    echo "Trivy: \$(sudo which trivy)" >> /home/ubuntu/tool_paths.txt
+    echo "Helm: \$(sudo which helm)" >> /home/ubuntu/tool_paths.txt
+    echo "Jenkins: \$(sudo which jenkins)" >> /home/ubuntu/tool_paths.txt
 
     # Add Jenkins initialAdminPassword to tool_paths.txt
     echo "Jenkins initialAdminPassword: \$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)" >> /home/ubuntu/tool_paths.txt
