@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'orange18036/team3-library'
+        DOCKER_IMAGE_GHCR = 'ghcr.io/orange18036/team3-library'
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = "${terraform}"
@@ -14,6 +15,7 @@ pipeline {
         HELM_PATH = "${helm}"
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
+        GITHUB_TOKEN = credentials('github-token')
     }
 
     options {
@@ -118,10 +120,10 @@ pipeline {
                     }
                 }
 
-                stage('Push Docker Image') {
+                stage('Push Docker Image to Docker Hub') {
                     steps {
                         script {
-                            echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                            echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} to Docker Hub"
                             withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                                 bat """
                                 echo Logging into Docker Hub...
@@ -130,20 +132,35 @@ pipeline {
                                 docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
                                 docker push ${DOCKER_IMAGE}:latest
                                 """
+                            }                            
+                        }
+                    }
+                }
+
+                stage('Push Docker Image to GHCR') {
+                    steps {
+                        script {
+                            echo "Pushing Docker image ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER} to GitHub Container Registry"
+                            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                                bat """
+                                echo Logging into GitHub Container Registry...
+                                echo %GITHUB_TOKEN% | docker login ghcr.io -u orange18036 --password-stdin
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
+                                docker push ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
+                                """
                             }
                         }
                     }
                 }
- 
+
+                
 
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
                         script {
-                            sshagent(['githubaccess']) {
+                          
                                 bat """
-                                    git fetch --all
-                                    git checkout main
-                                    git pull origin main
+                                    
                                     powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
                                     git add ${env.WORKSPACE}\\k8s\\deployment.yaml
                                     git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
@@ -153,9 +170,6 @@ pipeline {
                         }
                     }
                 }
-
-
-
 
                 stage('Deploy to Kubernetes') {
                     steps {
@@ -167,8 +181,6 @@ pipeline {
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\persistent-volume-claim.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\deployment.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\service.yaml -n ${NAMESPACE}
-                                
-
                             """
                             // "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus-server-service.yaml -n ${NAMESPACE}
                             // "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\pv-prometheus-alertmanager.yaml -n ${NAMESPACE}
@@ -176,10 +188,7 @@ pipeline {
                     }
                 }
 
-
-
-
-                 stage('Deploy with Helm') {
+                stage('Deploy with Helm') {
                     steps {
                         script {
                             echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
