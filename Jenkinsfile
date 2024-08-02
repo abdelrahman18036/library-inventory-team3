@@ -134,24 +134,6 @@ pipeline {
                         }
                     }
                 }
-                stage('Update Kubernetes Manifests in GitOps Repo') {
-                        steps {
-                            script {
-                                sh """
-                                git config --global user.email "abdelrahman.18036@gmail.com"
-                                git config --global user.name "abdelrahman18036"
-
-                                git clone https://github.com/abdelrahman18036/library-inventory-team3.git
-                                cd library-inventory-team3/k8s
-                                sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' deployment.yaml
-                                git add deployment.yaml
-                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                                git push https://github.com/abdelrahman18036/library-inventory-team3.git
-                                """
-                            }
-                        }
-                }
-
 
                 stage('Deploy to Kubernetes') {
                     steps {
@@ -171,32 +153,24 @@ pipeline {
                         }
                     }
                 }
-
-
                 stage('Update Kubernetes Manifests in GitOps Repo') {
-                    steps {
-                        script {
-                            bat """
-                                git config --global user.email "abdelrahman.18036@gmail.com"
-                                git config --global user.name "abdelrahman18036"
+                        steps {
+                            script {
+                                bat """
+                                    git config --global user.email "abdelrahman.18036@gmail.com"
+                                    git config --global user.name "abdelrahman18036"
 
-                                if exist library-inventory-team3 rmdir /s /q library-inventory-team3
-                                git clone https://github.com/abdelrahman18036/library-inventory-team3.git
-                                cd library-inventory-team3\\k8s
-                                powershell -Command "(gc deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content deployment.yaml"
-                                git add deployment.yaml
-                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                                git push https://github.com/abdelrahman18036/library-inventory-team3.git
-                            """
+                                    if exist library-inventory-team3 rmdir /s /q library-inventory-team3
+                                    git clone https://github.com/abdelrahman18036/library-inventory-team3.git
+                                    cd library-inventory-team3\\k8s
+                                    powershell -Command "(gc deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content deployment.yaml"
+                                    git add deployment.yaml
+                                    git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                                    git push https://github.com/abdelrahman18036/library-inventory-team3.git
+                                """
+                            }
                         }
                     }
-                }
-
-
-
-
-
-
                  stage('Deploy with Helm') {
                     steps {
                         script {
