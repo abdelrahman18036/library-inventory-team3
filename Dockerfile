@@ -30,5 +30,5 @@ ENV NAME=World
 # Expose port 5000
 EXPOSE 5000
 
-# Run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "4", "app:app"]
+# Run the application using Gunicorn with reduced workers and threads
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]

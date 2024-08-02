@@ -35,7 +35,7 @@ resource "aws_security_group" "public_ec2_sg" {
 
 # EC2 Instance
 resource "aws_instance" "public_ec2" {
-  ami                    = "ami-0aff18ec83b712f05"  
+  ami                    = "ami-0aff18ec83b712f05"  # Ubuntu 20.04 AMI ID for us-west-2, update if necessary
   instance_type          = "t3.micro"
   key_name               = "orange"  # Name of your key pair
   associate_public_ip_address = true  # Auto-assign public IP
@@ -74,9 +74,26 @@ resource "aws_instance" "public_ec2" {
     sudo apt-get update
     sudo apt-get install -y fontconfig openjdk-17-jre jenkins
 
-    # Enable and start Jenkins
-    sudo systemctl enable jenkins
-    sudo systemctl start jenkins
+    # Create a script to manage Jenkins
+    echo '#!/bin/bash
+    JENKINS_PORT=8080
+    echo "Checking if Jenkins is running on port \$JENKINS_PORT..."
+    PID=\$(sudo lsof -t -i :\$JENKINS_PORT)
+    if [ -n "\$PID" ]; then
+        echo "Jenkins is running with PID \$PID. Stopping the existing instance..."
+        sudo kill -9 \$PID
+        echo "Existing Jenkins instance stopped."
+    else
+        echo "No existing Jenkins instance running on port \$JENKINS_PORT."
+    fi
+    echo "Starting Jenkins on port \$JENKINS_PORT..."
+    nohup java -jar /usr/share/java/jenkins.war --httpPort=\$JENKINS_PORT > jenkins.log 2>&1 &
+    echo "Jenkins started. Check jenkins.log for details."
+    NEW_PID=\$(sudo lsof -t -i :\$JENKINS_PORT)
+    echo "Jenkins is running with PID \$NEW_PID."
+    ' > /home/ubuntu/start_jenkins.sh
+    sudo chmod +x /home/ubuntu/start_jenkins.sh
+    sudo /home/ubuntu/start_jenkins.sh
 
     # Install Terraform
     sudo apt-get install -y gnupg software-properties-common curl
@@ -97,13 +114,46 @@ resource "aws_instance" "public_ec2" {
     sudo chmod +x ./kubectl
     sudo mv ./kubectl /usr/local/bin/kubectl
 
+    # Create groups and manage permissions
+    sudo groupadd docker
+    sudo groupadd awscli
+    sudo groupadd terraform
+    sudo groupadd kubectl
+    sudo groupadd trivy
+    sudo groupadd helm
+
+    sudo usermod -aG docker,awscli,terraform,kubectl,trivy,helm jenkins
+
+    sudo chgrp docker /usr/bin/docker
+    sudo chmod g+rx /usr/bin/docker
+
+    sudo chgrp awscli /usr/local/bin/aws
+    sudo chmod g+rx /usr/local/bin/aws
+
+    sudo chgrp terraform /usr/bin/terraform
+    sudo chmod g+rx /usr/bin/terraform
+
+    sudo chgrp kubectl /usr/local/bin/kubectl
+    sudo chmod g+rx /usr/local/bin/kubectl
+
+    sudo chgrp trivy /usr/bin/trivy
+    sudo chmod g+rx /usr/bin/trivy
+
+    sudo chgrp helm /usr/local/bin/helm
+    sudo chmod g+rx /usr/local/bin/helm
+
+    sudo systemctl restart jenkins
+
     # Write paths to a file
-    echo "Terraform: $(which terraform)" > /home/ubuntu/tool_paths.txt
-    echo "AWS CLI: $(which aws)" >> /home/ubuntu/tool_paths.txt
-    echo "kubectl: $(which kubectl)" >> /home/ubuntu/tool_paths.txt
-    echo "Trivy: $(which trivy)" >> /home/ubuntu/tool_paths.txt
-    echo "Helm: $(which helm)" >> /home/ubuntu/tool_paths.txt
-    echo "Jenkins: $(which jenkins)" >> /home/ubuntu/tool_paths.txt
+    echo "Terraform: \$(which terraform)" > /home/ubuntu/tool_paths.txt
+    echo "AWS CLI: \$(which aws)" >> /home/ubuntu/tool_paths.txt
+    echo "kubectl: \$(which kubectl)" >> /home/ubuntu/tool_paths.txt
+    echo "Trivy: \$(which trivy)" >> /home/ubuntu/tool_paths.txt
+    echo "Helm: \$(which helm)" >> /home/ubuntu/tool_paths.txt
+    echo "Jenkins: \$(which jenkins)" >> /home/ubuntu/tool_paths.txt
+
+    # Add Jenkins initialAdminPassword to tool_paths.txt
+    echo "Jenkins initialAdminPassword: \$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)" >> /home/ubuntu/tool_paths.txt
   EOF
 }
 
