@@ -8,8 +8,6 @@ pipeline {
         TERRAFORM_EXEC_PATH = "${terraform}"
         TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
         AWS_CLI_PATH = "${aws}"
-        GIT_CREDENTIAL_ID = 'githubaccess'
-        GIT_SSH_COMMAND = 'ssh -i %SSH_KEY_FILE% -o StrictHostKeyChecking=no'
         KUBECTL_PATH = "${kubectl}"
         NAMESPACE = 'team3'
         TRIVY_PATH = "${trivy}"
@@ -156,23 +154,19 @@ pipeline {
                     }
                 }
                 stage('Update Kubernetes Manifests in GitOps Repo') {
-            steps {
-                script {
-                    withCredentials([sshUserPrivateKey(credentialsId: GIT_CREDENTIAL_ID, keyFileVariable: 'SSH_KEY_FILE')]) {
-                        bat """
-                            git config --global user.email "abdelrahman.18036@gmail.com"
-                            git config --global user.name "abdelrahman18036"
-                            git fetch --all
-                            git checkout main
-                            powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
-                            git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                            git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            set GIT_SSH_COMMAND=${GIT_SSH_COMMAND}
-                            git push origin main
-                        """
+                    steps {
+                        script {
+                           bat """
+                                git fetch --all
+                                git checkout main
+                                powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
+                                git add ${env.WORKSPACE}\\k8s\\deployment.yaml
+                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                                git push origin main
+                            """
+                        }
                     }
                 }
-            }
 
 
                  stage('Deploy with Helm') {
