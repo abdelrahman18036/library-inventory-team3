@@ -159,8 +159,6 @@ pipeline {
                            bat """
                                 git fetch --all
                                 git checkout main
-                                git config --global user.email "abdelrahman.18036@gmail.com"
-                                git config --global user.name "abdelrahman18036"
                                 powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
                                 git add ${env.WORKSPACE}\\k8s\\deployment.yaml
                                 git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
