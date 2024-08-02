@@ -165,16 +165,16 @@ resource "aws_instance" "public_ec2" {
 
 # Output the EC2 instance details
 output "public_ec2_instance_id" {
-  value       = aws_instance.public_ec2.id
+  value       = aws_instance.public_ec2[0].id
   description = "The ID of the public EC2 instance"
 }
 
 output "public_ec2_instance_public_ip" {
-  value       = aws_instance.public_ec2.public_ip
+  value       = aws_instance.public_ec2[0].public_ip
   description = "The public IP address of the public EC2 instance"
 }
 
 output "public_ec2_instance_public_dns" {
-  value       = aws_instance.public_ec2.public_dns
+  value       = aws_instance.public_ec2[0].public_dns
   description = "The public DNS of the public EC2 instance"
 }
