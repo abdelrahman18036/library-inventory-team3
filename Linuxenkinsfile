@@ -71,11 +71,12 @@ pipeline {
                         dir("${env.TERRAFORM_CONFIG_PATH}") {
                             echo "Initializing Terraform..."
                             echo "Done..."
-                            // sh """
-                            //     export AWS_PROFILE=orange
-                            //     ${TERRAFORM_EXEC_PATH} init
-                            //     ${TERRAFORM_EXEC_PATH} apply -auto-approve
-                            // """
+                            sh """
+                                export AWS_PROFILE=orange
+                                ${TERRAFORM_EXEC_PATH} init
+                            """
+                            // ${TERRAFORM_EXEC_PATH} apply -auto-approve
+
                         }
                     }
                 }
