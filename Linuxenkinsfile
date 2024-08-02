@@ -27,11 +27,11 @@ pipeline {
                 stage('Setup AWS CLI') {
                     steps {
                         withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                            sh """
-                            sudo ${env.AWS_CLI_PATH} configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile orange
-                            sudo ${env.AWS_CLI_PATH} configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile orange
-                            sudo ${env.AWS_CLI_PATH} configure set region us-west-2 --profile orange
-                            """
+                            sh '''
+                                ${AWS_CLI_PATH} configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile orange
+                                ${AWS_CLI_PATH} configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile orange
+                                ${AWS_CLI_PATH} configure set region us-west-2 --profile orange
+                            '''
                         }
                     }
                 }
@@ -40,7 +40,7 @@ pipeline {
                     steps {
                         script {
                             echo "Building Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            sh "sudo docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
+                            sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
                         }
                     }
                 }
@@ -50,7 +50,7 @@ pipeline {
                         script {
                             echo "Scanning Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} with Trivy"
                             sh """
-                                sudo ${env.TRIVY_PATH} image --format table --output trivy-results.txt ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                                ${TRIVY_PATH} image --format table --output trivy-results.txt ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
                                 cat trivy-results.txt
                             """
                         }
@@ -70,9 +70,9 @@ pipeline {
                     steps {
                         dir("${env.TERRAFORM_CONFIG_PATH}") {
                             sh """
-                            export AWS_PROFILE=orange
-                            sudo ${env.TERRAFORM_EXEC_PATH} init
-                            sudo ${env.TERRAFORM_EXEC_PATH} apply -auto-approve
+                                export AWS_PROFILE=orange
+                                ${TERRAFORM_EXEC_PATH} init
+                                ${TERRAFORM_EXEC_PATH} apply -auto-approve
                             """
                         }
                     }
@@ -83,7 +83,7 @@ pipeline {
                         script {
                             dir("${env.TERRAFORM_CONFIG_PATH}") {
                                 env.EKS_CLUSTER_NAME = sh(script: """
-                                    sudo ${env.TERRAFORM_EXEC_PATH} output -raw eks_cluster_name
+                                    ${TERRAFORM_EXEC_PATH} output -raw eks_cluster_name
                                 """, returnStdout: true).trim()
                                 echo "EKS Cluster Name is set to ${env.EKS_CLUSTER_NAME}"
                             }
@@ -96,7 +96,7 @@ pipeline {
                         script {
                             echo "Configuring kubeconfig for EKS Cluster: ${env.EKS_CLUSTER_NAME}"
                             sh """
-                                sudo ${env.AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}/${KUBECONFIG_PATH}" --profile orange
+                                ${AWS_CLI_PATH} eks update-kubeconfig --region us-west-2 --name "${env.EKS_CLUSTER_NAME}" --kubeconfig "${env.WORKSPACE}/${KUBECONFIG_PATH}" --profile orange
                             """
                             env.KUBECONFIG = "${env.WORKSPACE}/${KUBECONFIG_PATH}"
                             echo "KUBECONFIG is set to ${env.KUBECONFIG}"
@@ -109,13 +109,13 @@ pipeline {
                         script {
                             echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                             withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                                sh """
-                                echo Logging into Docker Hub...
-                                echo ${DOCKER_PASSWORD} | sudo docker login -u ${DOCKER_USERNAME} --password-stdin
-                                sudo docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                                sudo docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
-                                sudo docker push ${DOCKER_IMAGE}:latest
-                                """
+                                sh '''
+                                    echo Logging into Docker Hub...
+                                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                                    docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                                    docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
+                                    docker push ${DOCKER_IMAGE}:latest
+                                '''
                             }
                         }
                     }
@@ -126,11 +126,11 @@ pipeline {
                         script {
                             echo "Deploying to Kubernetes namespace: ${NAMESPACE}"
                             sh """
-                                sudo ${env.KUBECTL_PATH} create namespace ${NAMESPACE} --dry-run=client -o yaml | sudo ${env.KUBECTL_PATH} apply -f -
-                                sudo ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml -n ${NAMESPACE}
-                                sudo ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml -n ${NAMESPACE}
-                                sudo ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml -n ${NAMESPACE}
-                                sudo ${env.KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml -n ${NAMESPACE}
+                                ${KUBECTL_PATH} create namespace ${NAMESPACE} --dry-run=client -o yaml | ${KUBECTL_PATH} apply -f -
+                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume.yaml -n ${NAMESPACE}
+                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/persistent-volume-claim.yaml -n ${NAMESPACE}
+                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/deployment.yaml -n ${NAMESPACE}
+                                ${KUBECTL_PATH} apply -f ${env.WORKSPACE}/k8s/service.yaml -n ${NAMESPACE}
                             """
                         }
                     }
@@ -140,13 +140,13 @@ pipeline {
                         script {
                             echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
                             sh """
-                                sudo ${env.HELM_PATH} repo add prometheus-community https://prometheus-community.github.io/helm-charts
-                                sudo ${env.HELM_PATH} repo add grafana https://grafana.github.io/helm-charts
-                                sudo ${env.HELM_PATH} repo update
+                                ${HELM_PATH} repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                                ${HELM_PATH} repo add grafana https://grafana.github.io/helm-charts
+                                ${HELM_PATH} repo update
                                 
-                                sudo ${env.HELM_PATH} install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
+                                ${HELM_PATH} install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
                                 
-                                sudo ${env.HELM_PATH} install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
+                                ${HELM_PATH} install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
                             """
                         }
                     }
