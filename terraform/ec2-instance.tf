@@ -147,6 +147,16 @@ resource "aws_instance" "public_ec2" {
 
     sudo systemctl restart jenkins
 
+    # Write paths to a file
+    echo "Terraform: \$(sudo which terraform)" > /home/ubuntu/tool_paths.txt
+    echo "AWS CLI: \$(sudo which aws)" >> /home/ubuntu/tool_paths.txt
+    echo "kubectl: \$(sudo which kubectl)" >> /home/ubuntu/tool_paths.txt
+    echo "Trivy: \$(sudo which trivy)" >> /home/ubuntu/tool_paths.txt
+    echo "Helm: \$(sudo which helm)" >> /home/ubuntu/tool_paths.txt
+    echo "Jenkins: \$(sudo which jenkins)" >> /home/ubuntu/tool_paths.txt
+
+    # Add Jenkins initialAdminPassword to tool_paths.txt
+    echo "Jenkins initialAdminPassword: \$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)" >> /home/ubuntu/tool_paths.txt
   EOF
 }
 
