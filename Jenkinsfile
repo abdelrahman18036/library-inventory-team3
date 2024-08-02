@@ -135,6 +135,26 @@ pipeline {
                     }
                 }
 
+               stage('Update Kubernetes Manifests in GitOps Repo') {
+                    steps {
+                        script {
+                            sshagent(['githubaccess']) {
+                                bat """
+                                    git fetch --all
+                                    git checkout main
+                                    git pull origin main
+                                    powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
+                                    git add ${env.WORKSPACE}\\k8s\\deployment.yaml
+                                    git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                                    git push origin main
+                                """
+                            }
+                        }
+                    }
+
+
+
+
                 stage('Deploy to Kubernetes') {
                     steps {
                         script {
@@ -153,21 +173,8 @@ pipeline {
                         }
                     }
                 }
-                stage('Update Kubernetes Manifests in GitOps Repo') {
-                    steps {
-                        script {
-                           bat """
-                                ssh -vT git@github.com
-                                git fetch --all
-                                git checkout main
-                                powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
-                                git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                                git push origin main
-                            """
-                        }
-                    }
-                }
+ 
+
 
 
                  stage('Deploy with Helm') {
