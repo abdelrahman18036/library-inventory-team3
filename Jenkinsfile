@@ -157,6 +157,7 @@ pipeline {
                     steps {
                         script {
                            bat """
+                                ssh -vT git@github.com
                                 git fetch --all
                                 git checkout main
                                 powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
