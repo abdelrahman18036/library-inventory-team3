@@ -160,15 +160,16 @@ pipeline {
                     steps {
                         script {
                             echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
-                            sh """
-                                ${HELM_PATH} repo add prometheus-community https://prometheus-community.github.io/helm-charts
-                                ${HELM_PATH} repo add grafana https://grafana.github.io/helm-charts
-                                ${HELM_PATH} repo update
+                            echo "Installing Prometheus and Grafana Done"
+                            // sh """
+                            //     ${HELM_PATH} repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                            //     ${HELM_PATH} repo add grafana https://grafana.github.io/helm-charts
+                            //     ${HELM_PATH} repo update
                                 
-                                ${HELM_PATH} install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
+                            //     ${HELM_PATH} install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
                                 
-                                ${HELM_PATH} install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
-                            """
+                            //     ${HELM_PATH} install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
+                            // """
                         }
                     }
                 }
