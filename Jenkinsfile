@@ -155,8 +155,10 @@ pipeline {
                 }
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
-                        script {
-                           bat """
+                        sshagent(credentials: ['github-ssh-key']) {
+                            bat """
+                                git config --global user.email "abdelrahman.18036@gmail.com"
+                                git config --global user.name "abdelrahman18036"
                                 git fetch --all
                                 git checkout main
                                 powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
