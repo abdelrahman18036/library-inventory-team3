@@ -37,7 +37,7 @@ resource "aws_security_group" "public_ec2_sg" {
 resource "aws_instance" "public_ec2" {
   count = var.manage_ec2 ? 1 : 0
   ami                    = "ami-0aff18ec83b712f05"
-  instance_type          = "t3.micro"
+  instance_type          = "t3.medium"
   key_name               = "orange"
   associate_public_ip_address = true
 

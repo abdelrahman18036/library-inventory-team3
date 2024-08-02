@@ -73,7 +73,7 @@ variable "eks_node_role_name" {
 variable "eks_node_instance_type" {
   description = "The instance type for EKS nodes."
   type        = string
-  default     = "t3.micro"
+  default     = "t3.medium"
 }
 
 variable "eks_node_min_size" {
