@@ -134,8 +134,9 @@ pipeline {
                         }
                     }
                 }
+ 
 
-               stage('Update Kubernetes Manifests in GitOps Repo') {
+                stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
                         script {
                             sshagent(['githubaccess']) {
@@ -151,6 +152,7 @@ pipeline {
                             }
                         }
                     }
+                }
 
 
 
@@ -173,7 +175,7 @@ pipeline {
                         }
                     }
                 }
- 
+
 
 
 
