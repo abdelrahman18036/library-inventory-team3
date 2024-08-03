@@ -136,13 +136,13 @@ pipeline {
                         script {
                             echo "Running Terrascan to scan Dockerfile, Kubernetes YAML files, and Terraform code"
                             bat """
-                                "${env.TERRASCAN_PATH}" scan -d . --output terracan-report.txt || exit 0
-                            """
+                                    "${env.TERRASCAN_PATH}" scan -d . -o json -f terrascan-report.json || exit 0
+                                """
                         }
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'terrascan-report.txt', allowEmptyArchive: true
+                                 archiveArtifacts artifacts: 'terrascan-report.json', allowEmptyArchive: true
                         }
                     }
                 }
@@ -152,15 +152,15 @@ pipeline {
                         dir("${env.TERRAFORM_CONFIG_PATH}") {
                             withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                 bat """
-                                echo Running Infracost to estimate infrastructure costs...
-                                "${env.INFRACOST_PATH}" breakdown --path . --show-skipped --output infracost-report.txt || exit 0
-                                """
+                                    echo Running Infracost to estimate infrastructure costs...
+                                    "${env.INFRACOST_PATH}" breakdown --path . --show-skipped --out-file infracost-report.json || exit 0
+                                    """
                             }
                         }
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'infracost-report.txt', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'infracost-report.json', allowEmptyArchive: true
                         }
                     }
                 }
