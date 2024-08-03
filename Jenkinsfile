@@ -210,14 +210,14 @@ pipeline {
                 stage('Update Kubernetes Manifests and Push Trivy Results') {
                     steps {
                         script {
-                            git(url: 'https://github.com/abdelrahman18036/library-inventory-team3.git', branch: 'main', changelog: false, poll: false, depth: 1)
-                            
+                            git(url: 'https://github.com/abdelrahman18036/library-inventory-team3.git', branch: 'main', changelog: false, poll: false)
+
                             bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
-                            
+
                             bat "copy ${TRIVY_RESULTS_FILE} ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}"
-                            
+
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
-                            
+
                             if (hasChanges) {
                                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                     bat """
@@ -235,6 +235,7 @@ pipeline {
                         }
                     }
                 }
+
 
                 stage('Deploy to Kubernetes') {
                     steps {
