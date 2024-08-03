@@ -286,7 +286,6 @@ pipeline {
                         }
                     }
                 }
-
                 stage('Deploy with Helm') {
                     steps {
                         script {
@@ -295,14 +294,21 @@ pipeline {
                                 "${env.HELM_PATH}" repo add prometheus-community https://prometheus-community.github.io/helm-charts
                                 "${env.HELM_PATH}" repo add grafana https://grafana.github.io/helm-charts
                                 "${env.HELM_PATH}" repo update
-                                
-                                "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
-                                
-                                "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
+
+                                # Check if Prometheus is already installed
+                                "${env.HELM_PATH}" status prometheus --namespace ${NAMESPACE} >nul 2>&1 || (
+                                    "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
+                                )
+
+                                # Check if Grafana is already installed
+                                "${env.HELM_PATH}" status grafana --namespace ${NAMESPACE} >nul 2>&1 || (
+                                    "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
+                                )
                             """
                         }
                     }
                 }
+
             }
         }
     }
