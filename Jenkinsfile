@@ -17,7 +17,9 @@ pipeline {
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
         GITHUB_TOKEN = credentials('github-token')
         TRIVY_RESULTS_FILE = 'trivy-results.txt'
-        Python_path = 'C:\\Users\\abdel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
+        Python_path = "${python}"
+        TERRASCAN_PATH = "${terrascan}"
+        INFRACOST_PATH = "${infracost}"
     }
 
     options {
@@ -125,6 +127,40 @@ pipeline {
                     post {
                         always {
                             archiveArtifacts "${TRIVY_RESULTS_FILE}"
+                        }
+                    }
+                }
+
+                stage('Security Scanning with Terrascan') {
+                    steps {
+                        script {
+                            echo "Running Terrascan to scan Dockerfile, Kubernetes YAML files, and Terraform code"
+                            bat """
+                                "${env.TERRASCAN_PATH}" scan -d . --output terracan-report.txt || exit 0
+                            """
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'terrascan-report.txt', allowEmptyArchive: true
+                        }
+                    }
+                }
+
+                stage('Infrastructure Cost Estimation with Infracost') {
+                    steps {
+                        dir("${env.TERRAFORM_CONFIG_PATH}") {
+                            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                                bat """
+                                echo Running Infracost to estimate infrastructure costs...
+                                "${env.INFRACOST_PATH}" breakdown --path . --show-skipped --output infracost-report.txt || exit 0
+                                """
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'infracost-report.txt', allowEmptyArchive: true
                         }
                     }
                 }
