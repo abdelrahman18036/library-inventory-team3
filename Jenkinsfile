@@ -162,7 +162,7 @@ pipeline {
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
                             
                             if (hasChanges) {
-                                withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
+                                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                     bat """
                                         git config user.name "Jenkins CI"
                                         git config user.email "jenkins@example.com"
