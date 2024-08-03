@@ -154,18 +154,28 @@ pipeline {
 
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
-                       script {
-                            bat """
-                                powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
-                                git config user.name "From Jenkins"
-                                git config user.email "abdelrahman.18036@gmail.com"
-                                git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}" || exit 0
-                                git remote set-url origin https://\${GITHUB_TOKEN}@github.com/abdelrahman18036/library-inventory-team3.git
-                                git push origin main || exit 0
-                            """
+                        script {
+                            git(url: 'https://github.com/abdelrahman18036/library-inventory-team3.git', branch: 'main', changelog: false, poll: false, depth: 1)
+                            
+                            bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
+                            
+                            def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
+                            
+                            if (hasChanges) {
+                                withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
+                                    bat """
+                                        git config user.name "Jenkins CI"
+                                        git config user.email "jenkins@example.com"
+                                        git add ${env.WORKSPACE}\\k8s\\deployment.yaml
+                                        git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                                        git push https://%GITHUB_TOKEN%@github.com/abdelrahman18036/library-inventory-team3.git HEAD:main
+                                    """
+                                }
+                            } else {
+                                echo "No changes to commit"
+                            }
                         }
-                        }
+                    }
                 }
 
                 stage('Deploy to Kubernetes') {
