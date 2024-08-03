@@ -1,67 +1,41 @@
-# Build stage
-FROM python:3.8.10-slim-buster AS builder
+# Stage 1: Build Stage
+FROM python:3.8.10-alpine AS builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100
+ENV APP_HOME=/app
+WORKDIR $APP_HOME
 
-# Set work directory
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# Install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --user -r requirements.txt
 
-# Production stage
-FROM python:3.8.10-slim-buster as production
+# Install build dependencies and Python packages
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt \
+    && apk del .build-deps
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# Stage 2: Production Stage
+FROM python:3.8.10-alpine
 
-# Set work directory
-WORKDIR /app
+ENV APP_HOME=/app
+WORKDIR $APP_HOME
 
-# Install required system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install runtime dependencies
+RUN apk add --no-cache libffi
 
-# Copy Python dependencies from builder stage
-COPY --from=builder /root/.local /root/.local
+# Copy installed dependencies from builder stage
+COPY --from=builder /install /usr/local
 
-# Ensure scripts in .local are usable:
-ENV PATH=/root/.local/bin:$PATH
-
-# Create a non-root user
-RUN useradd -m appuser
-
-# Copy project files
-COPY --chown=appuser:appuser . .
+# Copy application code
+COPY . .
 
 # Use non-root user
-USER appuser
+RUN adduser -D orange
+USER orange
 
-# Set Python path
-ENV PYTHONPATH=/app
-
-# Expose port
+# Expose port 5000
 EXPOSE 5000
 
-# Set label
+# Set the label with the correct format
 LABEL org.opencontainers.image.source="https://github.com/abdelrahman18036/library-inventory-team3"
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "2", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
