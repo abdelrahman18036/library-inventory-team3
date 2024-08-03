@@ -26,8 +26,11 @@ def save_data(data):
 def index():
     """Render the home page with lists of books and borrowed books."""
     data = load_data()
-    return render_template('index.html', books=data['books'], 
-                           borrowed_books=data['borrowed_books'])
+    return render_template(
+        'index.html', 
+        books=data['books'], 
+        borrowed_books=data['borrowed_books']
+    )
 
 
 @app.route('/add_book', methods=['GET', 'POST'])
@@ -93,7 +96,10 @@ def search_book():
             flash('Search title is required!')
             return redirect(url_for('search_book'))
         data = load_data()
-        books = [book for book in data['books'] if title.lower() in book['title'].lower()]
+        books = [
+            book for book in data['books'] 
+            if title.lower() in book['title'].lower()
+        ]
         if not books:
             flash('No books found!')
         return render_template('search_book.html', books=books, search=True)
@@ -117,8 +123,11 @@ def borrow_book():
             abort(404, description="Book not found")
         
         data['books'].remove(book)
-        data['borrowed_books'].append({"title": title, "author": book['author'], 
-                                       "borrower": borrower})
+        data['borrowed_books'].append({
+            "title": title, 
+            "author": book['author'], 
+            "borrower": borrower
+        })
         save_data(data)
         flash('Book borrowed successfully!')
         return redirect(url_for('index'))
@@ -139,12 +148,16 @@ def return_book():
             flash('Title is required!')
             return redirect(url_for('return_book'))
         
-        borrowed_book = next((book for book in borrowed_books if book['title'] == title), None)
+        borrowed_book = next((book for book in borrowed_books 
+                              if book['title'] == title), None)
         if not borrowed_book:
             abort(404, description="Borrowed book not found")
         
         data['borrowed_books'].remove(borrowed_book)
-        data['books'].append({"title": title, "author": borrowed_book['author']})
+        data['books'].append({
+            "title": title, 
+            "author": borrowed_book['author']
+        })
         save_data(data)
         flash('Book returned successfully!')
         return redirect(url_for('index'))
