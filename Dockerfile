@@ -1,38 +1,67 @@
-# Stage 1: Build Stage
-FROM python:3.8.10-alpine AS builder
+# Build stage
+FROM python:3.8.10-slim-buster AS builder
 
-ENV APP_HOME=/app
-WORKDIR $APP_HOME
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
 
-# Install build dependencies and install Python dependencies
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt \
-    && apk del .build-deps
+# Set work directory
+WORKDIR /app
 
-# Stage 2: Production Stage
-FROM python:3.8.10-alpine
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV APP_HOME=/app
-WORKDIR $APP_HOME
+# Upgrade pip
+RUN pip install --upgrade pip
 
-# Install runtime dependencies (if needed)
-RUN apk add --no-cache libffi
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
 
-# Copy only the installed dependencies from the builder stage
-COPY --from=builder /install /usr/local
+# Production stage
+FROM python:3.8.10-slim-buster as production
 
-# Copy the application code from the local directory to the container
-COPY . .
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Use non-root user for better security
-RUN adduser -D orange
-USER orange
+# Set work directory
+WORKDIR /app
 
-# Expose port 5000
+# Install required system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from builder stage
+COPY --from=builder /root/.local /root/.local
+
+# Ensure scripts in .local are usable:
+ENV PATH=/root/.local/bin:$PATH
+
+# Create a non-root user
+RUN useradd -m appuser
+
+# Copy project files
+COPY --chown=appuser:appuser . .
+
+# Use non-root user
+USER appuser
+
+# Set Python path
+ENV PYTHONPATH=/app
+
+# Expose port
 EXPOSE 5000
 
-# Set the working directory
-LABEL org.opencontainers.image.source https://github.com/abdelrahman18036/library-inventory-team3
+# Set label
+LABEL org.opencontainers.image.source="https://github.com/abdelrahman18036/library-inventory-team3"
 
-# Run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "app:app"]
+# Run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "2", "app:app"]
