@@ -16,6 +16,8 @@ pipeline {
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
         GITHUB_TOKEN = credentials('github-token')
+        TRIVY_RESULTS_FILE = 'trivy-results.txt'
+        Python_path = 'C:\\Users\\abdel\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'
     }
 
     options {
@@ -47,13 +49,31 @@ pipeline {
                     }
                 }
 
+
+                stage('Code Quality Checks') {
+                    steps {
+                        script {
+                            bat """
+                                "${env.Python_path}" -m pip install --upgrade pip
+                                "${env.Python_path}" -m pip install flake8 black pytest
+                            """
+
+                            bat "\"${env.Python_path}\" -m flake8 ."
+
+                            bat "\"${env.Python_path}\" -m black --check ."
+
+                            bat "\"${env.Python_path}\" -m pytest"
+                        }
+                    }
+                }
+
                 stage('Scan Docker Image with Trivy') {
                     steps {
                         script {
                             echo "Scanning Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} with Trivy"
                             bat """
-                                "${env.TRIVY_PATH}" image --format table --output trivy-results.txt ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
-                                type trivy-results.txt
+                                "${env.TRIVY_PATH}" image --format table --output ${TRIVY_RESULTS_FILE} ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                                type ${TRIVY_RESULTS_FILE}
                             """
                             
                             // Optional: Fail the build if Trivy finds HIGH or CRITICAL vulnerabilities
@@ -70,7 +90,7 @@ pipeline {
                     }
                     post {
                         always {
-                            archiveArtifacts 'trivy-results.txt'
+                            archiveArtifacts "${TRIVY_RESULTS_FILE}"
                         }
                     }
                 }
@@ -142,22 +162,24 @@ pipeline {
                         script {
                             withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                 bat """
-                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
-                                echo ${env.GITHUB_TOKEN} | docker login ghcr.io -u abdelrahman18036 --password-stdin
-                                docker push ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
+                                echo %GITHUB_TOKEN% | docker login ghcr.io -u abdelrahman18036 --password-stdin
+                                docker push ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
                                 """
                             }
                         }
                     }
                 }
 
-
-                stage('Update Kubernetes Manifests in GitOps Repo') {
+                stage('Update Kubernetes Manifests and Push Trivy Results') {
                     steps {
                         script {
                             git(url: 'https://github.com/abdelrahman18036/library-inventory-team3.git', branch: 'main', changelog: false, poll: false, depth: 1)
                             
                             bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
+                            
+                            // Copy Trivy results to the repo
+                            bat "copy ${TRIVY_RESULTS_FILE} ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}"
                             
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
                             
@@ -167,7 +189,8 @@ pipeline {
                                         git config user.name "Jenkins CI"
                                         git config user.email "jenkins@example.com"
                                         git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                                        git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                                        git add ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}
+                                        git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} and add Trivy scan results"
                                         git push https://%GITHUB_TOKEN%@github.com/abdelrahman18036/library-inventory-team3.git HEAD:main
                                     """
                                 }
