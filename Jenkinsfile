@@ -55,8 +55,8 @@ pipeline {
                             steps {
                                 script {
                                     bat """
-                                        ${env.Python_path}\\python.exe -m pip install flake8
-                                        ${env.Python_path}\\python.exe -m flake8 . > flake8.log
+                                        ${env.Python_path} -m pip install flake8
+                                        ${env.Python_path} -m flake8 . > flake8.log
                                     """
                                 }
                             }
@@ -71,8 +71,8 @@ pipeline {
                             steps {
                                 script {
                                     bat """
-                                        ${env.Python_path}\\python.exe -m pip install black
-                                        ${env.Python_path}\\python.exe -m black --check . > black.log
+                                        ${env.Python_path} -m pip install black
+                                        ${env.Python_path} -m black --check . > black.log
                                     """
                                 }
                             }
@@ -87,8 +87,8 @@ pipeline {
                             steps {
                                 script {
                                     bat """
-                                        ${env.Python_path}\\python.exe -m pip install pytest
-                                        ${env.Python_path}\\python.exe -m pytest --junitxml=test-results.xml
+                                        ${env.Python_path} -m pip install pytest
+                                        ${env.Python_path} -m pytest --junitxml=test-results.xml
                                     """
                                 }
                             }
