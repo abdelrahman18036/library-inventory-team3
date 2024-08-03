@@ -198,9 +198,9 @@ pipeline {
                         script {
                             withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                 bat """
-                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
-                                echo %GITHUB_TOKEN% | docker login ghcr.io -u abdelrahman18036 --password-stdin
-                                docker push ${DOCKER_IMAGE_GHCR}:${env.BUILD_NUMBER}
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
+                                echo ${env.GITHUB_TOKEN} | docker login ghcr.io -u abdelrahman18036 --password-stdin
+                                docker push ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
                                 """
                             }
                         }
@@ -214,7 +214,6 @@ pipeline {
                             
                             bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
                             
-                            // Copy Trivy results to the repo
                             bat "copy ${TRIVY_RESULTS_FILE} ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}"
                             
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
