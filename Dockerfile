@@ -1,19 +1,19 @@
 # Stage 1: Build Stage
-FROM python:3.8-alpine AS builder
+FROM python:3.8.10-alpine AS builder
 
-WORKDIR /app
+ENV APP_HOME=/app
+WORKDIR $APP_HOME
 
-# Install build dependencies
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev
+# Install build dependencies and install Python dependencies
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt \
+    && apk del .build-deps
 
-# Copy and install dependencies to a specific directory
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Stage 2: Production Stage
+FROM python:3.8.10-alpine
 
-# Stage 2: Production Stages
-FROM python:3.8-alpine
-
-WORKDIR /app
+ENV APP_HOME=/app
+WORKDIR $APP_HOME
 
 # Install runtime dependencies (if needed)
 RUN apk add --no-cache libffi
@@ -23,6 +23,10 @@ COPY --from=builder /install /usr/local
 
 # Copy the application code from the local directory to the container
 COPY . .
+
+# Use non-root user for better security
+RUN adduser -D orange
+USER orange
 
 # Expose port 5000
 EXPOSE 5000

@@ -101,8 +101,6 @@ pipeline {
                     }
                 }
 
-
-
                 stage('Scan Docker Image with Trivy') {
                     steps {
                         script {
@@ -131,7 +129,6 @@ pipeline {
                     }
                 }
 
-                // Add any additional CI stages here (e.g., unit tests, code quality checks)
             }
         }
 
