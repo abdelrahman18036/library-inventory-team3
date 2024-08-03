@@ -154,17 +154,17 @@ pipeline {
 
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                     steps {
-                        script {
-                                bat """
-                                    powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
-                                    git config user.name "From Jenkins"
-                                    git config user.email "abdelrahman.18036@gmail.com"
-                                    git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                                    git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                                    git remote set-url origin https://\${GITHUB_TOKEN}@github.com/abdelrahman18036/library-inventory-team3.git
-                                    git push origin main
-                                """
-                            }
+                       script {
+                            bat """
+                                powershell -Command "(gc ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml"
+                                git config user.name "From Jenkins"
+                                git config user.email "abdelrahman.18036@gmail.com"
+                                git add ${env.WORKSPACE}\\k8s\\deployment.yaml
+                                git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}" || exit 0
+                                git remote set-url origin https://\${GITHUB_TOKEN}@github.com/abdelrahman18036/library-inventory-team3.git
+                                git push origin main || exit 0
+                            """
+                        }
                         }
                 }
 
