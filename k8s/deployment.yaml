@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: library-inventory
-          image: orange18036/team3-library:latest # Use a specific tag or 'latest'
+          image: orange18036/team3-library:170
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
