@@ -49,23 +49,59 @@ pipeline {
                     }
                 }
 
-
                 stage('Code Quality Checks') {
-                    steps {
-                        script {
-                            bat """
-                                "${env.Python_path}" -m pip install --upgrade pip
-                                "${env.Python_path}" -m pip install flake8 black pytest
-                            """
+                    stages {
+                        stage('Flake8') {
+                            steps {
+                                script {
+                                    bat """
+                                        ${env.Python_path}\\python.exe -m pip install flake8
+                                        ${env.Python_path}\\python.exe -m flake8 . > flake8.log
+                                    """
+                                }
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts artifacts: 'flake8.log', allowEmptyArchive: true
+                                }
+                            }
+                        }
 
-                            bat "\"${env.Python_path}\" -m flake8 ."
+                        stage('Black') {
+                            steps {
+                                script {
+                                    bat """
+                                        ${env.Python_path}\\python.exe -m pip install black
+                                        ${env.Python_path}\\python.exe -m black --check . > black.log
+                                    """
+                                }
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts artifacts: 'black.log', allowEmptyArchive: true
+                                }
+                            }
+                        }
 
-                            bat "\"${env.Python_path}\" -m black --check ."
-
-                            bat "\"${env.Python_path}\" -m pytest"
+                        stage('Pytest') {
+                            steps {
+                                script {
+                                    bat """
+                                        ${env.Python_path}\\python.exe -m pip install pytest
+                                        ${env.Python_path}\\python.exe -m pytest --junitxml=test-results.xml
+                                    """
+                                }
+                            }
+                            post {
+                                always {
+                                    archiveArtifacts artifacts: 'test-results.xml', allowEmptyArchive: true
+                                }
+                            }
                         }
                     }
                 }
+
+
 
                 stage('Scan Docker Image with Trivy') {
                     steps {
