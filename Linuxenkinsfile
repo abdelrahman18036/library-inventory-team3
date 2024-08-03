@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'orange18036/team3-library'
+        DOCKER_IMAGE_GHCR = 'ghcr.io/orange18036/team3-library'
+
         DOCKER_CREDENTIALS = 'dockerhub-credentials'
         KUBECONFIG_PATH = 'kubeconfig'
         TERRAFORM_EXEC_PATH = "terraform"
@@ -14,6 +16,7 @@ pipeline {
         HELM_PATH = "helm"
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
+        GITHUB_TOKEN = credentials('github-token')
     }
 
     options {
@@ -107,22 +110,37 @@ pipeline {
                     }
                 }
 
-                stage('Push Docker Image') {
+                  stage('Push Docker Image to Docker Hub') {
                     steps {
                         script {
-                            echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                            echo "Pushing Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} to Docker Hub"
                             withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS}", passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                                sh '''
-                                    echo Logging into Docker Hub...
-                                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                                    docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                                    docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                                    docker push ${DOCKER_IMAGE}:latest
-                                '''
+                                bat """
+                                echo Logging into Docker Hub...
+                                docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                                docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                                docker push ${DOCKER_IMAGE}:latest
+                                """
+                            }                            
+                        }
+                    }
+                }
+
+                stage('Push Docker Image to GitHub Container Registry') {
+                    steps {
+                        script {
+                            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                                bat """
+                                docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
+                                echo ${env.GITHUB_TOKEN} | docker login ghcr.io -u abdelrahman18036 --password-stdin
+                                docker push ghcr.io/abdelrahman18036/library-inventory-team3:${env.BUILD_NUMBER}
+                                """
                             }
                         }
                     }
                 }
+                
                 stage('Update Kubernetes Manifests in GitOps Repo') {
                         steps {
                             script {
