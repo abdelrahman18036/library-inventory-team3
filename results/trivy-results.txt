@@ -8,7 +8,7 @@ Learn more and start using VEX: https://aquasecurity.github.io/trivy/v0.54/docs/
 To disable this notice, set the TRIVY_DISABLE_VEX_NOTICE environment variable.
 
 
-orange18036/team3-library:187 (alpine 3.14.0)
+orange18036/team3-library:195 (alpine 3.14.0)
 =============================================
 Total: 77 (UNKNOWN: 0, LOW: 0, MEDIUM: 16, HIGH: 50, CRITICAL: 11)
 
