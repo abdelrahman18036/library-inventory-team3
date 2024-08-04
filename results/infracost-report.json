@@ -1,0 +1,34 @@
+Project: main
+
+ Name                                                     Monthly Qty  Unit              Monthly Cost   
+                                                                                                        
+ aws_eks_cluster.library_cluster                                                                        
+ └─ EKS cluster                                                   730  hours                   $73.00   
+                                                                                                        
+ aws_nat_gateway.nat_gateway                                                                            
+ ├─ NAT gateway                                                   730  hours                   $32.85   
+ └─ Data processed                                     Monthly cost depends on usage: $0.045 per GB     
+                                                                                                        
+ aws_eks_node_group.library_node_group                                                                  
+ ├─ Instance usage (Linux/UNIX, on-demand, t3.medium)             730  hours                   $30.37   
+ └─ Storage (general purpose SSD, gp2)                             20  GB                       $2.00   
+                                                                                                        
+ aws_instance.public_ec2[0]                                                                             
+ ├─ Instance usage (Linux/UNIX, on-demand, t3.medium)             730  hours                   $30.37   
+ └─ root_block_device                                                                                   
+    └─ Storage (general purpose SSD, gp2)                          20  GB                       $2.00   
+                                                                                                        
+ OVERALL TOTAL                                                                               $170.59 
+
+*Usage costs can be estimated by updating Infracost Cloud settings, see docs for other options.
+
+──────────────────────────────────
+22 cloud resources were detected:
+∙ 4 were estimated
+∙ 18 were free
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Project                                            ┃ Baseline cost ┃ Usage cost* ┃ Total cost ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━━━━┫
+┃ main                                               ┃          $171 ┃           - ┃       $171 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━┛
