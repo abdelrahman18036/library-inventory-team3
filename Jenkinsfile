@@ -113,7 +113,7 @@ pipeline {
                     }
                 }
 
-                 stage('Unit Test Coverage') {
+                stage('Unit Test Coverage') {
                     steps {
                         script {
                             bat """
