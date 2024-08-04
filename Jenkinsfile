@@ -16,7 +16,7 @@ pipeline {
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
         GITHUB_TOKEN = credentials('github-token')
-        TRIVY_RESULTS_FILE = 'results\\trivy-results.txt'
+        TRIVY_RESULTS_FILE = "${env.WORKSPACE}\\results\\trivy-results.txt"
         Python_path = "${python}"
         TERRASCAN_PATH = "${terrascan}"
         INFRACOST_PATH = "${infracost}"
