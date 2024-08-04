@@ -1,0 +1,42 @@
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+.navbar, .card, .list-group-item {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+.btn-primary, .btn-warning, .btn-success, .btn-danger, .btn-outline-success {
+    background-color: #6200ea;
+    border-color: #6200ea;
+    color: #ffffff;
+}
+
+.btn-primary:hover, .btn-warning:hover, .btn-success:hover, .btn-danger:hover, .btn-outline-success:hover {
+    background-color: #3700b3;
+    border-color: #3700b3;
+}
+
+.form-control {
+    background-color: #333333;
+    border-color: #555555;
+    color: #e0e0e0;
+}
+
+input::placeholder {
+    color: #bbbbbb;
+}
+
+h1, h2 {
+    color: #bb86fc;
+}
+
+a {
+    color: #bb86fc;
+}
+
+a:hover {
+    color: #3700b3;
+}
