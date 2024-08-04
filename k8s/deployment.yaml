@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: library-inventory
-          image: orange18036/team3-library:211
+          image: orange18036/team3-library:212
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
