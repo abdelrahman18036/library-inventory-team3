@@ -27,14 +27,8 @@ COPY --from=builder /install /usr/local
 # Copy application code
 COPY . .
 
-# Create a non-root user and group before changing ownership
-RUN adduser -D orange
-
 # Ensure data directory and library.json file exist, then fix permissions
-RUN mkdir -p /app/data && touch /app/data/library.json && chown -R orange:orange /app/data
-
-# Use non-root user
-USER orange
+RUN mkdir -p /app/data && touch /app/data/library.json
 
 # Expose port 5000
 EXPOSE 5000
