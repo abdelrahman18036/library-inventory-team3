@@ -27,11 +27,13 @@ COPY --from=builder /install /usr/local
 # Copy application code
 COPY . .
 
+# Create a non-root user and group before changing ownership
+RUN adduser -D orange
+
 # Fix permissions for the data directory
 RUN chown -R orange:orange /app/data
 
 # Use non-root user
-RUN adduser -D orange
 USER orange
 
 # Expose port 5000
