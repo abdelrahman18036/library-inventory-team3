@@ -1,0 +1,199 @@
+{
+  "results": {
+    "scan_errors": [
+      {
+        "iac_type": "docker",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "Dockerfile not found in the directory C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform"
+      },
+      {
+        "iac_type": "terraform",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\scripts",
+        "errMsg": "directory 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\scripts' has no terraform config files"
+      },
+      {
+        "iac_type": "cft",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.infracost\\terraform_modules",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.infracost\\terraform_modules\\manifest.json', err: failed to find valid Resources key in file: C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.infracost\\terraform_modules\\manifest.json"
+      },
+      {
+        "iac_type": "cft",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\aws\\5.60.0\\windows_amd64",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\aws\\5.60.0\\windows_amd64\\LICENSE.txt', err: unsupported extension for file C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\aws\\5.60.0\\windows_amd64\\LICENSE.txt"
+      },
+      {
+        "iac_type": "cft",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\kubernetes\\2.31.0\\windows_amd64",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\kubernetes\\2.31.0\\windows_amd64\\LICENSE.txt', err: unsupported extension for file C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\.terraform\\providers\\registry.terraform.io\\hashicorp\\kubernetes\\2.31.0\\windows_amd64\\LICENSE.txt"
+      },
+      {
+        "iac_type": "cft",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\infracost-report.json', err: error while resolving intrinsic functions, error invalid JSON: invalid character 'P' looking for beginning of value"
+      },
+      {
+        "iac_type": "arm",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\infracost-report.json'. err: unable to parse file C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\infracost-report.json"
+      },
+      {
+        "iac_type": "cft",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "error while loading iac file 'C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\terrascan-report.json', err: failed to find valid Resources key in file: C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform\\terrascan-report.json"
+      },
+      {
+        "iac_type": "kustomize",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "kustomization.y(a)ml file not found in the directory C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform"
+      },
+      {
+        "iac_type": "helm",
+        "directory": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+        "errMsg": "no helm charts found in directory C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform"
+      }
+    ],
+    "violations": [
+      {
+        "rule_name": "port22OpenToInternet",
+        "description": "Security Groups - Unrestricted Specific Ports - (SSH,22)",
+        "rule_id": "AC_AWS_0227",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "public_ec2_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "ec2-instance.tf",
+        "plan_root": ".\\",
+        "line": 2
+      },
+      {
+        "rule_name": "ec2UsingIMDSv1",
+        "description": "EC2 instances should disable IMDS or require IMDSv2 as this can be related to the weaponization phase of kill chain",
+        "rule_id": "AC_AWS_0479",
+        "severity": "MEDIUM",
+        "category": "Infrastructure Security",
+        "resource_name": "public_ec2",
+        "resource_type": "aws_instance",
+        "module_name": "root",
+        "file": "ec2-instance.tf",
+        "plan_root": ".\\",
+        "line": 37
+      },
+      {
+        "rule_name": "unknownPortOpenToInternet",
+        "description": "Ensure Unknown Port is not exposed to the entire internet",
+        "rule_id": "AC_AWS_0276",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "eks_control_plane_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "network.tf",
+        "plan_root": ".\\",
+        "line": 56
+      },
+      {
+        "rule_name": "unknownPortOpenToInternet",
+        "description": "Ensure Unknown Port is not exposed to the entire internet",
+        "rule_id": "AC_AWS_0276",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "eks_nodes_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "network.tf",
+        "plan_root": ".\\",
+        "line": 80
+      },
+      {
+        "rule_name": "unknownPortOpenToInternet",
+        "description": "Ensure Unknown Port is not exposed to the entire internet",
+        "rule_id": "AC_AWS_0276",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "eks_nodes_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "network.tf",
+        "plan_root": ".\\",
+        "line": 80
+      },
+      {
+        "rule_name": "port8080AlbNetworkPortSecurity",
+        "description": "Security Groups - Unrestricted Specific Ports - Known internal web port (TCP,8080)",
+        "rule_id": "AC_AWS_0242",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "public_ec2_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "ec2-instance.tf",
+        "plan_root": ".\\",
+        "line": 2
+      },
+      {
+        "rule_name": "port3000AlbNetworkPortSecurity",
+        "description": "Security Groups - Unrestricted Specific Ports - Prevalent known internal port (TCP,3000)",
+        "rule_id": "AC_AWS_0264",
+        "severity": "HIGH",
+        "category": "Infrastructure Security",
+        "resource_name": "eks_nodes_sg",
+        "resource_type": "aws_security_group",
+        "module_name": "root",
+        "file": "network.tf",
+        "plan_root": ".\\",
+        "line": 80
+      },
+      {
+        "rule_name": "eksControlPlaneLoggingDisabled",
+        "description": "Ensure EKS clusters have control plane logging enabled.",
+        "rule_id": "AC_AWS_0465",
+        "severity": "MEDIUM",
+        "category": "Logging and Monitoring",
+        "resource_name": "library_cluster",
+        "resource_type": "aws_eks_cluster",
+        "module_name": "root",
+        "file": "eks-cluster.tf",
+        "plan_root": ".\\",
+        "line": 50
+      },
+      {
+        "rule_name": "detailedMonitoringEnabledInstance",
+        "description": "Ensure that detailed monitoring is enabled for EC2 instances.",
+        "rule_id": "AC_AWS_0480",
+        "severity": "HIGH",
+        "category": "Logging and Monitoring",
+        "resource_name": "public_ec2",
+        "resource_type": "aws_instance",
+        "module_name": "root",
+        "file": "ec2-instance.tf",
+        "plan_root": ".\\",
+        "line": 37
+      },
+      {
+        "rule_name": "vpcFlowLogsNotEnabled",
+        "description": "Ensure VPC flow logging is enabled in all VPCs",
+        "rule_id": "AC_AWS_0369",
+        "severity": "LOW",
+        "category": "Logging and Monitoring",
+        "resource_name": "team_vpc",
+        "resource_type": "aws_vpc",
+        "module_name": "root",
+        "file": "network.tf",
+        "plan_root": ".\\",
+        "line": 1
+      }
+    ],
+    "skipped_violations": null,
+    "scan_summary": {
+      "file/folder": "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\library-inventory-team3\\terraform",
+      "iac_type": "terraform",
+      "scanned_at": "2024-08-04 12:45:57.8779121 +0000 UTC",
+      "policies_validated": 146,
+      "violated_policies": 10,
+      "low": 1,
+      "medium": 2,
+      "high": 7
+    }
+  }
+}
