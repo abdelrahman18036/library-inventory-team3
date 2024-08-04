@@ -345,7 +345,7 @@ pipeline {
                             bat """
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\pv-prometheus-alertmanager.yaml -n ${NAMESPACE}
                                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus-server-service.yaml -n ${NAMESPACE} --validate=false
-                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\alert-rules.yml -n ${NAMESPACE}
+                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\alert-rules.yml -n ${NAMESPACE} --validate=false
 
                             """
                         }
