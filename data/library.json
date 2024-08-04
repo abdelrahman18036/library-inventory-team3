@@ -1,4 +1,9 @@
 {
-    "books": [],
+    "books": [
+        {
+            "title": "asdfas",
+            "author": "fasdfas"
+        }
+    ],
     "borrowed_books": []
 }

@@ -27,6 +27,9 @@ COPY --from=builder /install /usr/local
 # Copy application code
 COPY . .
 
+# Fix permissions for the data directory
+RUN chown -R orange:orange /app/data
+
 # Use non-root user
 RUN adduser -D orange
 USER orange
