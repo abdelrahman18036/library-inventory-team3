@@ -16,10 +16,11 @@ pipeline {
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
         GITHUB_TOKEN = credentials('github-token')
-        TRIVY_RESULTS_FILE = 'trivy-results.txt'
+        TRIVY_RESULTS_FILE = 'results\\trivy-results.txt'
         Python_path = "${python}"
         TERRASCAN_PATH = "${terrascan}"
         INFRACOST_PATH = "${infracost}"
+        RESULTS_DIR = 'results'
     }
 
     options {
@@ -30,6 +31,14 @@ pipeline {
     stages {
         stage('CI: Build and Test') {
             stages {
+                stage('Create Results Directory') {
+                    steps {
+                        script {
+                            bat "mkdir ${RESULTS_DIR} || echo 'Directory already exists'"
+                        }
+                    }
+                }
+
                 stage('Setup AWS CLI') {
                     steps {
                         withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
@@ -58,13 +67,13 @@ pipeline {
                                 script {
                                     bat """
                                         ${env.Python_path} -m pip install flake8
-                                        ${env.Python_path} -m flake8 . > flake8.log || exit 0
+                                        ${env.Python_path} -m flake8 . > ${RESULTS_DIR}\\flake8.log || exit 0
                                     """
                                 }
                             }
                             post {
                                 always {
-                                    archiveArtifacts artifacts: 'flake8.log', allowEmptyArchive: true
+                                    archiveArtifacts artifacts: "${RESULTS_DIR}\\flake8.log", allowEmptyArchive: true
                                 }
                             }
                         }
@@ -74,13 +83,13 @@ pipeline {
                                 script {
                                     bat """
                                         ${env.Python_path} -m pip install black
-                                        ${env.Python_path} -m black --check . > black.log || exit 0
+                                        ${env.Python_path} -m black --check . > ${RESULTS_DIR}\\black.log || exit 0
                                     """
                                 }
                             }
                             post {
                                 always {
-                                    archiveArtifacts artifacts: 'black.log', allowEmptyArchive: true
+                                    archiveArtifacts artifacts: "${RESULTS_DIR}\\black.log", allowEmptyArchive: true
                                 }
                             }
                         }
@@ -90,13 +99,13 @@ pipeline {
                                 script {
                                     bat """
                                         ${env.Python_path} -m pip install pytest
-                                        ${env.Python_path} -m pytest --junitxml=test-results.xml || exit 0
+                                        ${env.Python_path} -m pytest --junitxml=${RESULTS_DIR}\\test-results.xml || exit 0
                                     """
                                 }
                             }
                             post {
                                 always {
-                                    archiveArtifacts artifacts: 'test-results.xml', allowEmptyArchive: true
+                                    archiveArtifacts artifacts: "${RESULTS_DIR}\\test-results.xml", allowEmptyArchive: true
                                 }
                             }
                         }
@@ -134,17 +143,17 @@ pipeline {
                 stage('Security Scanning with Terrascan') {
                     steps {
                         script {
-                             dir("${env.TERRAFORM_CONFIG_PATH}") {
-                            echo "Running Terrascan to scan Dockerfile, Kubernetes YAML files, and Terraform code"
-                            bat """
-                                "${env.TERRASCAN_PATH}" scan -d . -o json > terrascan-report.json || exit 0
-                            """
-                             }
+                            dir("${env.TERRAFORM_CONFIG_PATH}") {
+                                echo "Running Terrascan to scan Dockerfile, Kubernetes YAML files, and Terraform code"
+                                bat """
+                                    "${env.TERRASCAN_PATH}" scan -d . -o json > ${RESULTS_DIR}\\terrascan-report.json || exit 0
+                                """
+                            }
                         }
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'terrascan-report.json', allowEmptyArchive: true
+                            archiveArtifacts artifacts: "${RESULTS_DIR}\\terrascan-report.json", allowEmptyArchive: true
                         }
                     }
                 }
@@ -155,20 +164,17 @@ pipeline {
                             withCredentials([string(credentialsId: 'infracost-api-key', variable: 'INFRACOST_API_KEY')]) {
                                 bat """
                                     echo Running Infracost to estimate infrastructure costs...
-                                    "${env.INFRACOST_PATH}" breakdown --path . --show-skipped --out-file infracost-report.json || exit 0
+                                    "${env.INFRACOST_PATH}" breakdown --path . --show-skipped --out-file ${RESULTS_DIR}\\infracost-report.json || exit 0
                                 """
                             }
                         }
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: 'infracost-report.json', allowEmptyArchive: true
+                            archiveArtifacts artifacts: "${RESULTS_DIR}\\infracost-report.json", allowEmptyArchive: true
                         }
                     }
                 }
-
-
-
             }
         }
 
@@ -244,14 +250,14 @@ pipeline {
                     }
                 }
 
-                stage('Update Kubernetes Manifests and Push Trivy Results') {
+                stage('Update Kubernetes Manifests and Push Results') {
                     steps {
                         script {
                             git(url: 'https://github.com/abdelrahman18036/library-inventory-team3.git', branch: 'main', changelog: false, poll: false)
 
                             bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
 
-                            bat "copy ${TRIVY_RESULTS_FILE} ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}"
+                            bat "copy ${RESULTS_DIR}\\* ${env.WORKSPACE}\\results\\"
 
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
 
@@ -261,8 +267,8 @@ pipeline {
                                         git config user.name "Jenkins CI"
                                         git config user.email "jenkins@example.com"
                                         git add ${env.WORKSPACE}\\k8s\\deployment.yaml
-                                        git add ${env.WORKSPACE}\\trivy-results\\${env.BUILD_NUMBER}-${TRIVY_RESULTS_FILE}
-                                        git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} and add Trivy scan results"
+                                        git add ${env.WORKSPACE}\\results\\*
+                                        git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} and push results"
                                         git push https://%GITHUB_TOKEN%@github.com/abdelrahman18036/library-inventory-team3.git HEAD:main
                                     """
                                 }
@@ -272,7 +278,6 @@ pipeline {
                         }
                     }
                 }
-
 
                 stage('Deploy to Kubernetes') {
                     steps {
@@ -312,7 +317,6 @@ pipeline {
                         }
                     }
                 }
-
             }
         }
     }
