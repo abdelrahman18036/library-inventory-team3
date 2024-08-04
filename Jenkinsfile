@@ -31,14 +31,15 @@ pipeline {
     stages {
         stage('CI: Build and Test') {
             stages {
-                stage('Create Results Directory') {
+               stage('Create Results Directory') {
                     steps {
                         script {
-                            bat "mkdir ${RESULTS_DIR} || echo 'Directory already exists'"
+                            bat """
+                                if not exist ${RESULTS_DIR} mkdir ${RESULTS_DIR}
+                            """
                         }
                     }
                 }
-
                 stage('Setup AWS CLI') {
                     steps {
                         withCredentials([usernamePassword(credentialsId: 'aws-orange-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
