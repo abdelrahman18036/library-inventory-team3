@@ -16,7 +16,7 @@ pipeline {
         GRAFANA_ADMIN_PASSWORD = 'admin'
         PROMETHEUS_SCRAPE_INTERVAL = '30s'
         GITHUB_TOKEN = credentials('github-token')
-        TRIVY_RESULTS_FILE = "${env.WORKSPACE}\\results\\trivy-results.txt"
+        TRIVY_RESULTS_FILE = "results\\trivy-results.txt"
         Python_path = "${python}"
         TERRASCAN_PATH = "${terrascan}"
         INFRACOST_PATH = "${infracost}"
@@ -118,9 +118,9 @@ pipeline {
                         script {
                             echo "Scanning Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} with Trivy"
                             bat """
-                                "${env.TRIVY_PATH}" image --format table --output ${TRIVY_RESULTS_FILE} ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
-                                type ${TRIVY_RESULTS_FILE}
-                            """
+                                    "${env.TRIVY_PATH}" image --format table --output ${TRIVY_RESULTS_FILE} ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                                    type ${TRIVY_RESULTS_FILE}
+                                """
                             
                             // Optional: Fail the build if Trivy finds HIGH or CRITICAL vulnerabilities
                             // Uncomment the following lines if you want to enforce this
@@ -136,7 +136,7 @@ pipeline {
                     }
                     post {
                         always {
-                            archiveArtifacts "${TRIVY_RESULTS_FILE}"
+                        archiveArtifacts artifacts: "${TRIVY_RESULTS_FILE}", allowEmptyArchive: true
                         }
                     }
                 }
