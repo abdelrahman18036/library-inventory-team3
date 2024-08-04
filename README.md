@@ -1,6 +1,3 @@
-Here's an updated version of the `README.md` that includes all the additional features and configurations mentioned in your Jenkins pipeline:
-
-````markdown
 # Library Inventory System
 
 This project is a comprehensive Library Inventory System designed to manage books within a library, including adding, updating, borrowing, and returning books. It includes infrastructure setup using Terraform, deployment configurations in Kubernetes, monitoring setup with Prometheus, and CI/CD pipeline configuration using Jenkins.
@@ -29,6 +26,7 @@ This project is a comprehensive Library Inventory System designed to manage book
    git clone https://github.com/yourusername/library-inventory-system.git
    cd library-inventory-system
    ```
+
 ````
 
 2. **Install Python dependencies**:
@@ -239,4 +237,5 @@ This project is licensed under the MIT License.
 - **Pipeline Stages**: Updated to reflect all stages from the Jenkinsfile.
 
 This `README.md` provides a comprehensive overview of the project setup, including additional steps and tools used in the Jenkins pipeline.
-```
+
+````
