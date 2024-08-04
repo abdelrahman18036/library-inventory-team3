@@ -56,7 +56,7 @@ pipeline {
                     steps {
                         script {
                             echo "Building Docker image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                            bat "docker build --no-cache -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
+                            bat "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
                         }
                     }
                 }
