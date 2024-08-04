@@ -20,7 +20,7 @@ pipeline {
         Python_path = "${python}"
         TERRASCAN_PATH = "${terrascan}"
         INFRACOST_PATH = "${infracost}"
-        RESULTS_DIR = 'results'
+        RESULTS_DIR = "${env.WORKSPACE}\\results"
     }
 
     options {
