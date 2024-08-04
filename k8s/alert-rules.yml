@@ -1,11 +1,27 @@
-groups:
-  - name: example-alert
-    rules:
-      - alert: HighCPUUsage
-        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High CPU usage on instance {{ $labels.instance }}"
-          description: "CPU usage is above 80% (current value: {{ $value }})"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-rules-config
+  namespace: team3
+data:
+  alert.rules: |
+    groups:
+      - name: example-alert
+        rules:
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on instance {{ $labels.instance }}"
+              description: "CPU usage is above 80% (current value: {{ $value }})"
+
+          - alert: HighMemoryUsage
+            expr: node_memory_Active_bytes / node_memory_MemTotal_bytes * 100 > 80
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High Memory usage on instance {{ $labels.instance }}"
+              description: "Memory usage is above 80% (current value: {{ $value }})"
