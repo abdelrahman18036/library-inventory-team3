@@ -27,8 +27,6 @@ This project is a comprehensive Library Inventory System designed to manage book
    cd library-inventory-system
    ```
 
-````
-
 2. **Install Python dependencies**:
 
    ```bash
@@ -237,5 +235,4 @@ This project is licensed under the MIT License.
 - **Pipeline Stages**: Updated to reflect all stages from the Jenkinsfile.
 
 This `README.md` provides a comprehensive overview of the project setup, including additional steps and tools used in the Jenkins pipeline.
-
-````
+```
