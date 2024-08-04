@@ -134,10 +134,12 @@ pipeline {
                 stage('Security Scanning with Terrascan') {
                     steps {
                         script {
+                             dir("${env.TERRAFORM_CONFIG_PATH}") {
                             echo "Running Terrascan to scan Dockerfile, Kubernetes YAML files, and Terraform code"
                             bat """
                                 "${env.TERRASCAN_PATH}" scan -d . -o json > terrascan-report.json || exit 0
                             """
+                             }
                         }
                     }
                     post {
