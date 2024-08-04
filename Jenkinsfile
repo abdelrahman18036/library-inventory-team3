@@ -113,6 +113,25 @@ pipeline {
                     }
                 }
 
+                 stage('Unit Test Coverage') {
+                    steps {
+                        script {
+                            bat """
+                                ${env.Python_path} -m pip install coverage
+                                ${env.Python_path} -m coverage run -m pytest
+                                ${env.Python_path} -m coverage report -m > ${RESULTS_DIR}\\coverage.txt
+                                ${env.Python_path} -m coverage xml -o ${RESULTS_DIR}\\coverage.xml
+                            """
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "${RESULTS_DIR}\\coverage.*", allowEmptyArchive: true
+                        }
+                    }
+                }
+
+
                 stage('Scan Docker Image with Trivy') {
                     steps {
                         script {
@@ -140,6 +159,8 @@ pipeline {
                         }
                     }
                 }
+
+               
 
                 stage('Security Scanning with Terrascan') {
                     steps {
