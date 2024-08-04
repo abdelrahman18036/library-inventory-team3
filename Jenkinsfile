@@ -258,15 +258,13 @@ pipeline {
 
                             bat "powershell -Command \"(Get-Content ${env.WORKSPACE}\\k8s\\deployment.yaml) -replace 'image: .*', 'image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}' | Set-Content ${env.WORKSPACE}\\k8s\\deployment.yaml\""
 
-                            bat "copy ${RESULTS_DIR}\\* ${env.WORKSPACE}\\results\\"
-
                             def hasChanges = bat(script: 'git status --porcelain', returnStatus: true) == 0
 
                             if (hasChanges) {
                                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                                     bat """
                                         git config user.name "Jenkins CI"
-                                        git config user.email "jenkins@example.com"
+                                        git config user.email "jenkins@orange.com"
                                         git add ${env.WORKSPACE}\\k8s\\deployment.yaml
                                         git add ${env.WORKSPACE}\\results\\*
                                         git commit -m "Update deployment to use image ${DOCKER_IMAGE}:${env.BUILD_NUMBER} and push results"
