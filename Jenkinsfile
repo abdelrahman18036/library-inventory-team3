@@ -315,42 +315,42 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy with Helm') {
-                    steps {
-                        script {
-                            echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
-                            bat """
-                                "${env.HELM_PATH}" repo add prometheus-community https://prometheus-community.github.io/helm-charts
-                                "${env.HELM_PATH}" repo add grafana https://grafana.github.io/helm-charts
-                                "${env.HELM_PATH}" repo update
+                // stage('Deploy with Helm') {
+                //     steps {
+                //         script {
+                //             echo "Deploying Helm charts to Kubernetes namespace: ${NAMESPACE}"
+                //             bat """
+                //                 "${env.HELM_PATH}" repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                //                 "${env.HELM_PATH}" repo add grafana https://grafana.github.io/helm-charts
+                //                 "${env.HELM_PATH}" repo update
 
-                                # Check if Prometheus is already installed
-                                "${env.HELM_PATH}" status prometheus --namespace ${NAMESPACE} >nul 2>&1 || (
-                                    "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
-                                )
+                //                 # Check if Prometheus is already installed
+                //                 "${env.HELM_PATH}" status prometheus --namespace ${NAMESPACE} >nul 2>&1 || (
+                //                     "${env.HELM_PATH}" install prometheus prometheus-community/prometheus --namespace ${NAMESPACE} --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false --set server.global.scrape_interval=${PROMETHEUS_SCRAPE_INTERVAL}
+                //                 )
 
-                                # Check if Grafana is already installed
-                                "${env.HELM_PATH}" status grafana --namespace ${NAMESPACE} >nul 2>&1 || (
-                                    "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
-                                )
-                            """
-                        }
-                    }
-                }
+                //                 # Check if Grafana is already installed
+                //                 "${env.HELM_PATH}" status grafana --namespace ${NAMESPACE} >nul 2>&1 || (
+                //                     "${env.HELM_PATH}" install grafana grafana/grafana --namespace ${NAMESPACE} --set admin.password=${GRAFANA_ADMIN_PASSWORD} --set service.type=LoadBalancer
+                //                 )
+                //             """
+                //         }
+                //     }
+                // }
 
-                stage('Apply Kubernetes Manifests') {
-                    steps {
-                        script {
-                            echo "Applying Kubernetes manifests in namespace: ${NAMESPACE}"
-                            bat """
-                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\pv-prometheus-alertmanager.yaml -n ${NAMESPACE}
-                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus-server-service.yaml -n ${NAMESPACE} --validate=false
-                                "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\alert-rules.yml -n ${NAMESPACE} --validate=false
+                // stage('Apply Kubernetes Manifests') {
+                //     steps {
+                //         script {
+                //             echo "Applying Kubernetes manifests in namespace: ${NAMESPACE}"
+                //             bat """
+                //                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\pv-prometheus-alertmanager.yaml -n ${NAMESPACE}
+                //                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus-server-service.yaml -n ${NAMESPACE} --validate=false
+                //                 "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\alert-rules.yml -n ${NAMESPACE} --validate=false
 
-                            """
-                        }
-                    }
-                }
+                //             """
+                //         }
+                //     }
+                // }
 
 
             }
