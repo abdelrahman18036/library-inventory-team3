@@ -293,6 +293,10 @@ This image captures the Jenkins pipeline stage where code changes are pushed to 
 
 This image illustrates the process of updating the Docker tag name during Jenkins pipeline execution, ensuring unique tagging for each build.
 
+## Minimize Docker Size to 19 MB
+
+![Minimize Docker Size to 19 MB](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/docker.png "Minimize Docker Size to 19 MB")
+
 ## Conclusion
 
 This project demonstrated the integration of multiple DevOps tools and practices, including containerization with Docker, orchestration with Kubernetes, infrastructure as code with Terraform, and continuous deployment with Jenkins. By adopting GitOps practices, the project ensured automated and consistent deployments. Challenges such as internet connectivity issues, fluctuating availability zones, and security concerns were effectively managed through thoughtful configuration and automation.

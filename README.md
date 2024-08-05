@@ -298,6 +298,10 @@ This image captures the Jenkins pipeline stage where code changes are pushed to 
 
 This image illustrates the process of updating the Docker tag name during Jenkins pipeline execution, ensuring unique tagging for each build.
 
+## Minimize Docker Size to 19 MB
+
+![Minimize Docker Size to 19 MB](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/docker.png "Minimize Docker Size to 19 MB")
+
 ## Full Documentation
 
 For full details on the project, please refer to the **[Documentation.md](Documentation.md)** file.
