@@ -304,8 +304,7 @@ For full details on the project, please refer to the **[Documentation.md](Docume
 
 ## Process Flow Diagram
 
-```mermaid
-graph TD;
+```
     A[GitHub (Code Push)] --> B[Jenkins (Trigger Pipeline)];
     B --> C[Checkout Code];
     C --> D[Build Docker Image];
