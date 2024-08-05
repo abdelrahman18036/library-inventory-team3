@@ -2,6 +2,42 @@
 
 This document provides an in-depth overview of the Library Inventory System project, detailing the setup, issues encountered during development, and solutions implemented to resolve those issues. Additionally, it covers the infrastructure and CI/CD pipeline setup, and specific challenges related to the Kubernetes deployment.
 
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Project Completion Checklist](#project-completion-checklist)
+  - [Minimum Requirements](#minimum-requirements)
+  - [Bonus](#bonus)
+  - [Extra Bonuses](#extra-bonuses)
+- [Terraform Deployment Steps](#terraform-deployment-steps)
+- [Results Analysis and Actions](#results-analysis-and-actions)
+  - [Coverage Report (coverage.txt)](#1-coverage-report-coveragetxt)
+  - [Flake8 Linting Report (flake8.log)](#2-flake8-linting-report-flake8log)
+  - [Infracost Report (infracost-reportjson)](#3-infracost-report-infracost-reportjson)
+  - [Terrascan Security Report (terrascan-reportjson)](#4-terrascan-security-report-terrascan-reportjson)
+  - [Trivy Vulnerability Scan (trivy-results.txt)](#5-trivy-vulnerability-scan-trivy-resultstxt)
+- [Infrastructure Setup Challenges](#infrastructure-setup-challenges)
+  - [Terraform](#terraform)
+  - [Jenkins Pipeline](#jenkins-pipeline)
+  - [Jenkins Configuration](#jenkins-configuration)
+  - [GitOps and Continuous Deployment](#gitops-and-continuous-deployment)
+  - [Package Management and Dependencies](#package-management-and-dependencies)
+- [Application Deployment](#application-deployment)
+  - [Docker](#docker)
+  - [Kubernetes](#kubernetes)
+  - [Monitoring and Alerts](#monitoring-and-alerts)
+- [Issues and Resolutions](#issues-and-resolutions)
+  - [Internet Connectivity in Kubernetes](#internet-connectivity-in-kubernetes)
+  - [Changing Availability Zones](#changing-availability-zones)
+  - [Terraform Automation Limitations](#terraform-automation-limitations)
+  - [Security Scanning with Terrascan](#security-scanning-with-terrascan)
+  - [Cost Management with Infracost](#cost-management-with-infracost)
+- [Screenshots and Explanations](#screenshots-and-explanations)
+- [Conclusion](#conclusion)
+- [Project Structure](#project-structure)
+- [File Sturcture](#file-sturcture)
+- [License](#license)
+
 ## Project Overview
 
 The Library Inventory System is designed to manage books within a library, including adding, updating, borrowing, and returning books. The system utilizes Flask for the web application, Docker for containerization, Kubernetes for deployment, Prometheus for monitoring, and Jenkins for CI/CD automation. The infrastructure is provisioned using Terraform.
@@ -107,49 +143,13 @@ This report gives a breakdown of the estimated costs of your infrastructure.
   - **Monitor Data Processing Costs:** If the project involves large data transfers, monitor the usage and explore cost-saving options like S3 for storage or data transfer acceleration.
 
 - **Example:**
+
   - **EKS Cluster Cost:** At $73 per month, the EKS cluster is a major cost driver. Evaluate if the workload justifies this expense.
   - **NAT Gateway:** Costs $32.85 per month. Ensure it’s necessary for your architecture and consider using a smaller, less costly configuration if possible.
 
-### **4. Terrascan Security Report (terrascan-report.json)**
+  access due to the absence of a NAT Gateway.
 
-This JSON file lists security issues found in your Terraform configuration.
-
-- **Key Actions:**
-
-  - **Resolve High Severity Issues:** Focus on issues with HIGH severity, such as open SSH ports and unrestricted security groups.
-  - **Implement Best Practices:** Ensure that security groups are configured to allow the minimum necessary access, and that IMDSv2 is enforced for EC2 instances.
-
-- **Example:**
-  - **Port 22 Open to Internet:** This is a critical issue that needs immediate attention. Restrict SSH access to specific IPs or through a VPN.
-  - **IMDSv2:** Enforce IMDSv2 to enhance the security of your EC2 instances.
-
-### **5. Trivy Vulnerability Scan (trivy-results.txt)**
-
-This report contains the vulnerabilities found in your Docker image.
-
-- **Key Actions:**
-
-  - **Upgrade Vulnerable Packages:** Address CRITICAL and HIGH severity vulnerabilities by upgrading to the fixed versions listed.
-  - **Rebuild and Rescan:** After upgrading, rebuild your Docker image and run Trivy again to ensure that vulnerabilities are resolved.
-
-- **Example:**
-  - **CVE-2021-36159 in apk-tools:** Upgrade `apk-tools` to version `2.12.6-r0` to resolve this critical vulnerability.
-  - **Multiple Issues in busybox:** Upgrade `busybox` to version `1.33.1-r6` or higher to address multiple HIGH severity vulnerabilities.
-
----
-
-## Infrastructure Setup Challenges
-
-### Terraform
-
-The infrastructure was provisioned using Terraform, automating the creation of an Amazon EKS (Elastic Kubernetes Service) cluster, networking components, and other AWS resources.
-
-**Key Challenges and Solutions:**
-
-1. **Internet Connectivity Issue**:
-
-   - **Problem**: The Kubernetes cluster lacked internet access due to the absence of a NAT Gateway.
-   - **Solution**: A NAT Gateway was provisioned, enabling outbound internet access for Kubernetes nodes in the private subnets.
+  - **Solution**: A NAT Gateway was provisioned, enabling outbound internet access for Kubernetes nodes in the private subnets.
 
 2. **Availability Zone Fluctuations**:
    - **Problem**: Each Terraform apply caused changes in the availability zones, leading to infrastructure instability.
@@ -166,7 +166,7 @@ Jenkins was configured with environment variables to streamline various stages o
 - **DOCKER_IMAGE**: `orange18036/team3-library`
 - **DOCKER_CREDENTIALS**: `dockerhub-credentials`
 - **KUBECONFIG_PATH**: `kubeconfig`
-- **TERRAFORM_EXEC_PATH**: `${env.WORKSPACE}\\terraform`
+- **TERRAFORM_EXEC_PATH**: `${env.WORKSPACE}\terraform`
 - **AWS_CLI_PATH**: `${aws}`
 - **KUBECTL_PATH**: `${kubectl}`
 - **NAMESPACE**: `team3`
@@ -300,6 +300,115 @@ This project demonstrated the integration of multiple DevOps tools and practices
 For further enhancements or modifications, consult the specific configuration files and adjust them according to the needs of the deployment environment.
 
 ## Project Structure
+
+The project is structured as follows:
+
+- **app/**: Contains the Flask application code.
+- **terraform/**: Terraform configuration files for provisioning infrastructure.
+- **k8s/**: Kubernetes manifests for deploying the application and monitoring tools.
+- **jenkins/**: Jenkins pipeline configurations and scripts.
+- **results/**: Directory to store the output of various pipeline stages, including test results, coverage reports, and scan results.
+- **Dockerfile**: Dockerfile for building the application container image.
+- **Jenkinsfile**: Jenkins pipeline definition file.
+- **requirements.txt**: Python dependencies for the Flask application.
+
+## File Sturcture
+
+│ .dockerignore
+│ .gitignore
+│ app.py
+│ Dockerfile
+│ Documentation.md
+│ Jenkinsfile
+│ Linuxenkinsfile
+│ README.md
+│ requirements.txt
+│
+├───data
+│ library.json
+│
+├───k8s
+│ │ deployment.yaml
+│ │ ingress.yaml
+│ │ persistent-volume-claim.yaml
+│ │ persistent-volume.yaml
+│ │ replicaset.yaml
+│ │ service.yaml
+│ │
+│ ├───grafana
+│ │ grafana-deployment.yaml
+│ │ grafana-service.yaml
+│ │
+│ ├───monitoring
+│ │ grafana-pvc.yaml
+│ │ prometheus-pvc.yaml
+│ │
+│ └───prometheus
+│ prometheus-clusterrole.yaml
+│ prometheus-clusterrolebinding.yaml
+│ prometheus-config.yaml
+│ prometheus-deployment.yaml
+│ prometheus-service.yaml
+│
+├───results
+│ black.log
+│ coverage.txt
+│ flake8.log
+│ infracost-report.json
+│ terrascan-report.json
+│ test-results.xml
+│ trivy-results.txt
+│
+├───screenshots
+│ complete_test.png
+│ deploy_jenkins_on_ec2.png
+│ grafan.png
+│ Infracost.png
+│ Infracost_pull_request.png
+│ promuthues_alert.png
+│ push_from_jenkins_git.png
+│ terrascan.png
+│ update_dockertagname_withjenkins.png
+│
+├───static
+│ custom.css
+│
+├───templates
+│ 400.html
+│ 404.html
+│ add_book.html
+│ base.html
+│ borrow_book.html
+│ index.html
+│ return_book.html
+│ search_book.html
+│ update_book.html
+│
+├───terraform
+│ │ main.tf
+│ │ outputs.tf
+│ │ providers.tf
+│ │ s3.tf
+│ │ variables.tf
+│ │
+│ └───modules
+│ ├───ec2
+│ │ main.tf
+│ │ outputs.tf
+│ │ variables.tf
+│ │
+│ ├───eks
+│ │ main.tf
+│ │ outputs.tf
+│ │ variables.tf
+│ │
+│ └───vpc
+│ main.tf
+│ outputs.tf
+│ variables.tf
+│
+├───tests
+│ test_library_app.py
 
 ## License
 

@@ -23,6 +23,7 @@ This project is a comprehensive Library Inventory System designed to manage book
   - [Extra Bonuses](#extra-bonuses)
 - [Screenshots and Explanations](#screenshots-and-explanations)
 - [Full Documentation](#full-documentation)
+- [Process Flow Diagram](#process-flow-diagram)
 - [License](#license)
 
 ## Getting Started
@@ -300,6 +301,36 @@ This image illustrates the process of updating the Docker tag name during Jenkin
 ## Full Documentation
 
 For full details on the project, please refer to the **[Documentation.md](Documentation.md)** file.
+
+## Process Flow Diagram
+
+```mermaid
+graph TD;
+    A[GitHub (Code Push)] --> B[Jenkins (Trigger Pipeline)];
+    B --> C[Checkout Code];
+    C --> D[Build Docker Image];
+    D --> E[Code Quality Checks];
+    E --> E1[Flake8];
+    E --> E2[Black];
+    E --> E3[Pytest];
+    D --> F[Unit Test Coverage (Coverage)];
+    F --> G[Security Scanning];
+    G --> G1[Trivy];
+    G --> G2[Terrascan];
+    F --> H[Infrastructure Cost Estimation (Infracost)];
+    H --> I[Push Docker Image];
+    I --> I1[DockerHub (Image Storage)];
+    I --> I2[GHCR (Image Storage)];
+    I --> J[Deploy to AWS EKS (Kubernetes)];
+    J --> K[AWS VPC (Virtual Private Cloud)];
+    K --> L[AWS EC2 (Kubernetes Nodes)];
+    L --> M[AWS Load Balancer];
+    M --> N[Apply Kubernetes Manifests];
+    N --> O[Deploy Application on AWS EKS Cluster];
+    O --> P[Deploy Prometheus & Grafana];
+    P --> P1[Prometheus (Monitoring)];
+    P --> P2[Grafana (Visualization)];
+```
 
 ## License
 
