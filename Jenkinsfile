@@ -333,10 +333,21 @@ pipeline {
                             "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\grafana\\grafana-deployment.yaml -n ${NAMESPACE}
                             "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\grafana\\grafana-service.yaml -n ${NAMESPACE}
                             """
-                            
+
                         }
                     }
                 }
+        
+                stage('Deploy Loki') {
+                        steps {
+                            script {
+                                bat """
+                                "${env.HELM_PATH}" install loki grafana/loki-stack --namespace ${NAMESPACE} --set grafana.enabled=true --set prometheus.enabled=true
+                                """
+                            }
+                        }
+                    }
+
 
 
                 // stage('Deploy with Helm') {
