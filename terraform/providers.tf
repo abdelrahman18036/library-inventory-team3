@@ -1,20 +1,19 @@
-# Configure the AWS provider
 provider "aws" {
   region  = var.aws_region
   profile = var.aws_profile
 }
 
-# Data source to get available AWS availability zones
 data "aws_availability_zones" "available" {}
 
-# Data source to authenticate with EKS cluster
+
 data "aws_eks_cluster_auth" "cluster_auth" {
-  name = module.eks.cluster_name
+  name = aws_eks_cluster.library_cluster.name
 }
 
-# Configure the Kubernetes provider to interact with the EKS cluster
 provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.certificate_authority_data)
+  host                   = aws_eks_cluster.library_cluster.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.library_cluster.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster_auth.token
+  config_path            = "C:\\Users\\abdel\\.kube\\config"
+  config_context         = "arn:aws:eks:us-west-2:637423483309:cluster/team3-library-cluster"
 }

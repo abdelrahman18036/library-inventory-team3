@@ -58,10 +58,22 @@ variable "node_group_name" {
   default     = "team3-library-node-group"
 }
 
-variable "key_name" {
-  description = "The name of the key pair"
+variable "eks_role_name" {
+  description = "The name of the EKS role."
   type        = string
-  default     = "orange"
+  default     = "team3_eks_cluster_role"
+}
+
+variable "eks_node_role_name" {
+  description = "The name of the EKS node role."
+  type        = string
+  default     = "team3_eks_node_role"
+}
+
+variable "eks_node_instance_type" {
+  description = "The instance type for EKS nodes."
+  type        = string
+  default     = "t3.medium"
 }
 
 variable "eks_node_min_size" {
@@ -80,6 +92,18 @@ variable "eks_node_desired_size" {
   description = "The desired size of the EKS node group."
   type        = number
   default     = 1
+}
+
+variable "grafana_admin_password" {
+  description = "The admin password for Grafana"
+  type        = string
+  default     = "admin"
+}
+
+variable "prometheus_scrape_interval" {
+  description = "The global scrape interval for Prometheus"
+  type        = string
+  default     = "15s"
 }
 
 variable "manage_ec2" {

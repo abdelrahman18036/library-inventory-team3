@@ -53,6 +53,71 @@ resource "aws_subnet" "private_subnet_b" {
   }
 }
 
+resource "aws_security_group" "eks_control_plane_sg" {
+  name        = "${var.team_prefix}_eks_control_plane_sg"
+  description = "Security group for EKS control plane"
+  vpc_id      = aws_vpc.team_vpc.id
+
+  ingress {
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.team_prefix}_eks_control_plane_sg"
+  }
+}
+
+resource "aws_security_group" "eks_nodes_sg" {
+  name        = "${var.team_prefix}_eks_nodes_sg"
+  description = "Security group for EKS nodes"
+  vpc_id      = aws_vpc.team_vpc.id
+
+  # Existing rule for port 5000
+  ingress {
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # New rule for Prometheus
+  ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Or more specific CIDR if needed
+  }
+
+  # New rule for Grafana
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Or more specific CIDR if needed
+  }
+
+  # Existing egress rule
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.team_prefix}_eks_nodes_sg"
+  }
+}
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.team_vpc.id
   tags = {

@@ -1,73 +1,61 @@
-output "vpc_id" {
-  value = module.vpc.vpc_id
-}
-
-output "public_subnet_id_a" {
-  value = module.vpc.public_subnet_id_a
-}
-
-output "public_subnet_id_b" {
-  value = module.vpc.public_subnet_id_b
-}
-
-output "private_subnet_id_a" {
-  value = module.vpc.private_subnet_id_a
-}
-
-output "private_subnet_id_b" {
-  value = module.vpc.private_subnet_id_b
-}
-
-output "eks_cluster_name" {
-  value = module.eks.cluster_name
-}
-
-output "eks_node_group_name" {
-  value = module.eks.node_group_name
-}
-
-output "eks_cluster_endpoint" {
-  value = module.eks.cluster_endpoint
-}
-
-output "eks_certificate_authority_data" {
-  value     = module.eks.certificate_authority_data
-  sensitive = true
-}
-
-output "public_ec2_instance_id" {
-  value = module.ec2.public_ec2_instance_id
-}
-
-output "public_ec2_instance_public_ip" {
-  value = module.ec2.public_ec2_instance_public_ip
-}
-
-output "public_ec2_instance_public_dns" {
-  value = module.ec2.public_ec2_instance_public_dns
-}
-
 output "kubeconfig" {
   value = <<EOL
 apiVersion: v1
 clusters:
 - cluster:
-    server: ${module.eks.cluster_endpoint}
-    certificate-authority-data: ${module.eks.certificate_authority_data}
-  name: ${module.eks.cluster_name}
+    server: ${aws_eks_cluster.library_cluster.endpoint}
+    certificate-authority-data: ${aws_eks_cluster.library_cluster.certificate_authority[0].data}
+  name: ${aws_eks_cluster.library_cluster.name}
 contexts:
 - context:
-    cluster: ${module.eks.cluster_name}
-    user: ${module.eks.cluster_name}
-  name: ${module.eks.cluster_name}
-current-context: ${module.eks.cluster_name}
+    cluster: ${aws_eks_cluster.library_cluster.name}
+    user: ${aws_eks_cluster.library_cluster.name}
+  name: ${aws_eks_cluster.library_cluster.name}
+current-context: ${aws_eks_cluster.library_cluster.name}
 kind: Config
 preferences: {}
 users:
-- name: ${module.eks.cluster_name}
+- name: ${aws_eks_cluster.library_cluster.name}
   user:
     token: ${data.aws_eks_cluster_auth.cluster_auth.token}
 EOL
   description = "Kubeconfig content"
-  sensitive   = true
+  sensitive = true  
+}
+
+output "certificate_authority_data" {
+  value = aws_eks_cluster.library_cluster.certificate_authority[0].data
+  sensitive = true  # Marking this output as sensitive
+}
+
+output "cluster_endpoint" {
+  value = aws_eks_cluster.library_cluster.endpoint
+}
+
+output "cluster_name" {
+  value = aws_eks_cluster.library_cluster.name
+}
+
+output "node_group_name" {
+  value = aws_eks_node_group.library_node_group.node_group_name
+}
+
+output "public_subnet_id_a" {
+  value = aws_subnet.public_subnet_a.id
+}
+
+output "public_subnet_id_b" {
+  value = aws_subnet.public_subnet_b.id
+}
+
+output "private_subnet_id_a" {
+  value = aws_subnet.private_subnet_a.id
+}
+
+output "private_subnet_id_b" {
+  value = aws_subnet.private_subnet_b.id
+}
+
+output "eks_cluster_name" {
+  value = aws_eks_cluster.library_cluster.name
 }
