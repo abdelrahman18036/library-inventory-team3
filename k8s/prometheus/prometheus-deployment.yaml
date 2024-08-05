@@ -21,13 +21,7 @@ spec:
           volumeMounts:
             - name: prometheus-config-volume
               mountPath: /etc/prometheus/
-            - name: prometheus-alert-rules-volume # New volume mount
-              mountPath: /etc/prometheus/prometheus-alert-rules.yaml
-              subPath: prometheus-alert-rules.yaml
       volumes:
         - name: prometheus-config-volume
           configMap:
             name: prometheus-config
-        - name: prometheus-alert-rules-volume # New volume
-          configMap:
-            name: prometheus-alert-rules

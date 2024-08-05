@@ -315,6 +315,30 @@ pipeline {
                         }
                     }
                 }
+
+                stage('Deploy Grafana and Prometheus') {
+                    steps {
+                        script {
+                            echo "Deploying Grafana to Kubernetes namespace: ${NAMESPACE}"
+                            bat """
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus\\prometheus-clusterrole.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus\\prometheus-clusterrolebinding.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\monitoring\\prometheus-pvc.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus\\prometheus-config.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus\\prometheus-deployment.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\prometheus\\prometheus-service.yaml -n ${NAMESPACE}  
+                            """
+                            echo "Deploying Grafana to Kubernetes namespace: ${NAMESPACE}"
+                            bat """
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\grafana\\grafana-deployment.yaml -n ${NAMESPACE}
+                            "${env.KUBECTL_PATH}" apply -f ${env.WORKSPACE}\\k8s\\grafana\\grafana-service.yaml -n ${NAMESPACE}
+                            """
+                            
+                        }
+                    }
+                }
+
+
                 // stage('Deploy with Helm') {
                 //     steps {
                 //         script {

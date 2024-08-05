@@ -22,3 +22,58 @@ data:
             regex: "5000"
           - action: labelmap
             regex: __meta_kubernetes_pod_label_(.+)
+
+  prometheus-alert-rules.yaml: |
+    groups:
+    - name: scrape-monitoring
+      rules:
+      
+      # Alert if the scrape duration is higher than a threshold
+      - alert: HighScrapeDuration
+        expr: scrape_duration_seconds > 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High scrape duration for {{ $labels.job }}"
+          description: "The scrape duration for job {{ $labels.job }} has been over 1 second for more than 1 minute."
+
+      # Alert if there are zero samples after metric relabeling
+      - alert: NoSamplesPostRelabeling
+        expr: scrape_samples_post_metric_relabeling == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No samples post relabeling for {{ $labels.job }}"
+          description: "The job {{ $labels.job }} has zero samples after metric relabeling for more than 5 minutes."
+
+      # Alert if the number of samples scraped is too low
+      - alert: LowSamplesScraped
+        expr: scrape_samples_scraped < 100  # Adjust this threshold based on your environment
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low samples scraped for {{ $labels.job }}"
+          description: "The job {{ $labels.job }} has scraped less than 100 samples for more than 5 minutes."
+
+      # Alert if the number of new series added during scrape is too high
+      - alert: HighSeriesAdded
+        expr: scrape_series_added > 1000  # Adjust this threshold based on your environment
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High series added for {{ $labels.job }}"
+          description: "The job {{ $labels.job }} has added more than 1000 new series during the scrape for more than 5 minutes."
+
+      # Alert if a target is down
+      - alert: TargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target down for {{ $labels.job }}"
+          description: "The target {{ $labels.instance }} for job {{ $labels.job }} has been down for more than 5 minutes."
