@@ -31,7 +31,111 @@ The Library Inventory System is designed to manage books within a library, inclu
 - Security and Compliance: Implemented security scanning using Terrascan, Trivy ✔️
 - Cost Management: Integrated infrastructure cost estimation using Infracost ✔️
 
-## Infrastructure Setup
+## Terraform Deployment Steps
+
+To deploy the infrastructure using Terraform, follow these steps:
+
+1. **Initialize Terraform:**
+   Ensure you are in the `terraform` directory and run the initialization command:
+
+   ```sh
+   terraform init
+   ```
+
+2. **Review Terraform Plan:**
+   To see the changes Terraform will make to your infrastructure, run:
+
+   ```sh
+   terraform plan
+   ```
+
+   This step is crucial for understanding what resources will be created, modified, or destroyed.
+
+3. **Apply Terraform Configuration:**
+   Once you are satisfied with the plan, apply the configuration to provision the resources:
+
+   ```sh
+   terraform apply
+   ```
+
+   Confirm the action when prompted. This will create the necessary AWS resources for your project.
+
+4. **Verify Deployment:**
+   After the deployment, ensure that the AWS resources (EKS cluster, EC2 instances, NAT Gateway, etc.) are properly set up by checking the AWS Management Console.
+
+5. **Post-Deployment Checks:**
+   - **EKS Cluster:** Verify that the EKS cluster is running and properly connected.
+   - **NAT Gateway:** Ensure the NAT Gateway provides the necessary internet connectivity.
+   - **Security Groups:** Check the security groups for any open ports and review them against your security policies.
+
+---
+
+## Results Analysis and Actions
+
+### **1. Coverage Report (coverage.txt)**
+
+This file provides insights into the code coverage of your test cases.
+
+- **Key Actions:**
+
+  - **Analyze Missing Coverage:** Identify the lines of code that are not covered by tests and consider adding test cases to increase coverage.
+  - **Target High-Impact Areas:** Focus on critical paths in your application to ensure they are well-tested.
+
+- **Example:**
+  - `app.py`: 43 out of 121 statements are missing coverage. Consider adding tests for functions and conditional paths in these areas.
+  - `tests/test_library_app.py`: Although this file itself is a test file, some parts of the tests are not being executed. Make sure the tests are comprehensive.
+
+### **2. Flake8 Linting Report (flake8.log)**
+
+This log details code style issues detected by Flake8.
+
+- **Key Actions:**
+  - **Fix Long Lines:** Several lines exceed the recommended 79-character limit (`E501`). Consider breaking these lines or refactoring the code for better readability.
+  - **Trailing Whitespace and Blank Lines:** Remove any unnecessary trailing whitespace and extra blank lines (`W291`, `W293`).
+  - **Code Cleanliness:** Resolve any other issues like trailing whitespace to adhere to PEP 8 standards.
+
+### **3. Infracost Report (infracost-report.json)**
+
+This report gives a breakdown of the estimated costs of your infrastructure.
+
+- **Key Actions:**
+
+  - **Review High-Cost Resources:** Focus on resources with significant costs, such as the EKS cluster and NAT Gateway. Consider optimization strategies like using reserved instances or rightsizing resources.
+  - **Monitor Data Processing Costs:** If the project involves large data transfers, monitor the usage and explore cost-saving options like S3 for storage or data transfer acceleration.
+
+- **Example:**
+  - **EKS Cluster Cost:** At $73 per month, the EKS cluster is a major cost driver. Evaluate if the workload justifies this expense.
+  - **NAT Gateway:** Costs $32.85 per month. Ensure it’s necessary for your architecture and consider using a smaller, less costly configuration if possible.
+
+### **4. Terrascan Security Report (terrascan-report.json)**
+
+This JSON file lists security issues found in your Terraform configuration.
+
+- **Key Actions:**
+
+  - **Resolve High Severity Issues:** Focus on issues with HIGH severity, such as open SSH ports and unrestricted security groups.
+  - **Implement Best Practices:** Ensure that security groups are configured to allow the minimum necessary access, and that IMDSv2 is enforced for EC2 instances.
+
+- **Example:**
+  - **Port 22 Open to Internet:** This is a critical issue that needs immediate attention. Restrict SSH access to specific IPs or through a VPN.
+  - **IMDSv2:** Enforce IMDSv2 to enhance the security of your EC2 instances.
+
+### **5. Trivy Vulnerability Scan (trivy-results.txt)**
+
+This report contains the vulnerabilities found in your Docker image.
+
+- **Key Actions:**
+
+  - **Upgrade Vulnerable Packages:** Address CRITICAL and HIGH severity vulnerabilities by upgrading to the fixed versions listed.
+  - **Rebuild and Rescan:** After upgrading, rebuild your Docker image and run Trivy again to ensure that vulnerabilities are resolved.
+
+- **Example:**
+  - **CVE-2021-36159 in apk-tools:** Upgrade `apk-tools` to version `2.12.6-r0` to resolve this critical vulnerability.
+  - **Multiple Issues in busybox:** Upgrade `busybox` to version `1.33.1-r6` or higher to address multiple HIGH severity vulnerabilities.
+
+---
+
+## Infrastructure Setup Challenges
 
 ### Terraform
 
@@ -162,12 +266,6 @@ This image captures the deployment of Jenkins on an EC2 instance, a crucial part
 
 The Grafana dashboard provides a comprehensive view of the application's metrics, allowing real-time monitoring of system health.
 
-### Infracost Report
-
-![Infracost](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/Infracost.png "Infracost Report")
-
-This screenshot shows the cost breakdown of provisioned resources, helping in budgeting and optimizing cloud expenditures.
-
 ### Infracost Pull Request Integration
 
 ![Infracost Pull Request](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/Infracost_pull_request.png "Infracost Pull Request Integration")
@@ -186,12 +284,6 @@ Prometheus alerting is configured to notify the team in case of critical issues,
 
 This image captures the Jenkins pipeline stage where code changes are pushed to the Git repository, ensuring version control.
 
-### Terrascan Security Scan
-
-![Terrascan](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/terrascan.png "Terrascan Security Scan")
-
-This screenshot shows Terrascan scanning Terraform configurations for security risks, ensuring compliance with best practices.
-
 ### Update Docker Tag Name with Jenkins
 
 ![Update Docker Tag Name with Jenkins](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/update_dockertagname_withjenkins.png "Update Docker Tag Name with Jenkins")
@@ -206,82 +298,6 @@ For further enhancements or modifications, consult the specific configuration fi
 
 ## Project Structure
 
-```plaintext
-.
-│   .dockerignore
-│   .gitignore
-│   app.py
-│   docker-compose.yml
-│   Dockerfile
-│   Documentation.md
-│   Jenkinsfile
-│   Linuxenkinsfile
-│   README.md
-│   requirements.txt
-│
-├───data
-│       library.json
-│
-├───k8s
-│       alert-rules.yml
-│       deployment.yaml
-│       ingress.yaml
-│       persistent-volume-claim.yaml
-│       persistent-volume.yaml
-│       prometheus-server-service.yaml
-│       pv-prometheus-alertmanager.yaml
-│       replicaset.yaml
-│       service.yaml
-│
-├───results
-│       black.log
-│       flake8.log
-│       infracost-report.json
-│       terrascan-report.json
-│       test-results.xml
-│       trivy-results.txt
-│
-├───Screenshots
-│       complete_test.png
-│       deploy_jenkins_on_ec2.png
-│       grafan.png
-│       Infracost.png
-│       Infracost_pull_request.png
-│       promuthues_alert.png
-│       push_from_jenkins_git.png
-│       terrascan.png
-│       update_dockertagname_withjenkins.png
-│
-├───templates
-│       400.html
-│       404.html
-│       add_book.html
-│       base.html
-│       borrow_book.html
-│       index.html
-│       return_book.html
-│       search_book.html
-│       update_book.html
-│
-└───terraform
-    │   .terraform.lock.hcl
-    │   backend.tf
-    │   ec2-instance.tf
-    │   eks-cluster.tf
-    │   k8s-resources.text
-    │   network.tf
-    │   outputs.tf
-    │   providers.tf
-    │   variables.tf
-    │
-    └───scripts
-            check_eks_status.ps1
-            check_eks_status.sh
-
-```
-
-```
 ## License
 
 This project is licensed under the MIT License.
-```

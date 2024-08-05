@@ -337,18 +337,6 @@ pipeline {
                         }
                     }
                 }
-        
-                stage('Deploy Loki') {
-                        steps {
-                            script {
-                                bat """
-                                "${env.HELM_PATH}" install loki grafana/loki-stack --namespace ${NAMESPACE} --set grafana.enabled=true --set prometheus.enabled=true
-                                """
-                            }
-                        }
-                    }
-
-
 
                 // stage('Deploy with Helm') {
                 //     steps {
