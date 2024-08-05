@@ -17,6 +17,13 @@ Dockerfile
 docker-compose.yml
 README.md
 Documentation.md
+Jenkinsfile
+Linuxenkinsfile
+# Igonre Screenshots
+screenshots/
+
+# Ignore Results
+results/
 
 # Ignore Git and other version control directories and files
 .git/
