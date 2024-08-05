@@ -6,30 +6,33 @@ This document provides an in-depth overview of the Library Inventory System proj
 
 The Library Inventory System is designed to manage books within a library, including adding, updating, borrowing, and returning books. The system utilizes Flask for the web application, Docker for containerization, Kubernetes for deployment, Prometheus for monitoring, and Jenkins for CI/CD automation. The infrastructure is provisioned using Terraform.
 
-# Project Completion Checklist
+## Project Completion Checklist
 
-## Minimum Requirements
+### Minimum Requirements
 
-- Application Development using Flask, Python ✔️
-- Dockerization using Docker ✔️
-- Infrastructure as Code with Terraform using Terraform ✔️
-- Kubernetes Deployment on EKS using Kubernetes, AWS EKS ✔️
-- CI/CD Pipeline Setup using Jenkins ✔️
-- Documentation and Presentation using Markdown, Git ✔️
+- **Application Development using Flask, Python** ✔️
+- **Dockerization using Docker** ✔️
+- **Infrastructure as Code with Terraform** ✔️
+- **Kubernetes Deployment on EKS** ✔️
+- **CI/CD Pipeline Setup using Jenkins** ✔️
+- **Documentation and Presentation using Markdown, Git** ✔️
 
-## Bonus
+### Bonus
 
-- Monitoring and Logging using Prometheus, Grafana ✔️
+- **Monitoring and Logging using Prometheus, Grafana** ✔️
 
-## Extra Bonuses
+### Extra Bonuses
 
-- Automated Tagging: Auto-update the deployment file with the latest Docker image tag after build using Jenkins, Docker ✔️
-- Continuous Integration: Implemented live webhook to trigger Jenkins pipeline automatically using Jenkins, GitHub Webhooks ✔️
-- Container Registry: Push Docker image to GitHub Container Registry using GitHub Container Registry (ghcr.io) ✔️
-- GitOps Integration: Automate and manage deployment configurations using GitOps practices using Git, Jenkins ✔️
-- Code Quality Assurance: Integrated code quality checks using Flake8, Black, Pytest ✔️
-- Security and Compliance: Implemented security scanning using Terrascan, Trivy ✔️
-- Cost Management: Integrated infrastructure cost estimation using Infracost ✔️
+- **Automated Tagging:** Auto-update the deployment file with the latest Docker image tag after build using Jenkins, Docker ✔️
+- **Continuous Integration:** Implemented live webhook to trigger Jenkins pipeline automatically using Jenkins, GitHub Webhooks ✔️
+- **Container Registry:** Push Docker image to GitHub Container Registry using GitHub Container Registry (ghcr.io) ✔️
+- **GitOps Integration:** Automate and manage deployment configurations using GitOps practices using Git, Jenkins ✔️
+- **Code Quality Assurance:** Integrated code quality checks using Flake8, Black, Pytest ✔️
+- **Unit Testing with Coverage:** Implemented unit tests with code coverage reporting using Coverage ✔️
+- **Security and Compliance:** Implemented security scanning using Terrascan, Trivy ✔️
+- **Cost Management:** Integrated infrastructure cost estimation using Infracost ✔️
+- **Super Slim Docker Image:** Reduced Docker image size to just 19 MB using SlimToolkit ✔️
+- **Terraform Moduling:** Organized Terraform configurations into reusable modules for better maintainability and scalability ✔️
 
 ## Terraform Deployment Steps
 

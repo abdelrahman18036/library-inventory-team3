@@ -1,24 +1,51 @@
 # Library Inventory System
 
-This project is a comprehensive Library Inventory System designed to manage books within a library, including adding, updating, borrowing, and returning books. It includes infrastructure setup using Terraform, deployment configurations in Kubernetes, monitoring setup with Prometheus, and CI/CD pipeline configuration using Jenkins.
+This project is a comprehensive Library Inventory System designed to manage books within a library, including adding, updating, borrowing, and returning books. The system is containerized using Docker, deployed on Kubernetes, and monitored with Prometheus and Grafana. The infrastructure is provisioned using Terraform, and a CI/CD pipeline is managed with Jenkins.
+
+## Table of Contents
+
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Running the Application Locally](#running-the-application-locally)
+- [Deployment](#deployment)
+  - [Docker](#docker)
+  - [Kubernetes](#kubernetes)
+  - [Terraform](#terraform)
+  - [CI/CD with Jenkins](#cicd-with-jenkins)
+- [Monitoring and Alerts](#monitoring-and-alerts)
+  - [Prometheus Setup](#prometheus-setup)
+  - [Creating Alerts](#creating-alerts)
+- [Project Completion Checklist](#project-completion-checklist)
+  - [Minimum Requirements](#minimum-requirements)
+  - [Bonus](#bonus)
+  - [Extra Bonuses](#extra-bonuses)
+- [Screenshots and Explanations](#screenshots-and-explanations)
+- [Full Documentation](#full-documentation)
+- [License](#license)
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Python 3.10+**: Required for running the Flask web application. Ensure that you have Python 3.10 or higher installed to support all dependencies.
-- **Docker**: Used to containerize the application. Docker simplifies the deployment process by packaging the application and its dependencies into a single container image.
-- **Kubernetes**: For deploying the application in a clustered environment. Kubernetes manages containerized applications across a cluster of machines, ensuring high availability and scalability.
-- **Terraform**: To provision and manage AWS infrastructure, including setting up an EKS (Elastic Kubernetes Service) cluster. Terraform enables infrastructure as code, allowing for automated and consistent provisioning.
-- **AWS CLI**: Required for interacting with AWS services. The AWS CLI allows you to manage AWS resources directly from the command line.
-- **Jenkins**: For setting up and managing CI/CD pipelines. Jenkins automates the build, test, and deployment processes, facilitating continuous integration and continuous deployment.
-- **Prometheus**: Used for monitoring and alerting. Prometheus collects metrics from configured endpoints and stores them in a time-series database, providing powerful querying capabilities and alerting.
-- **Grafana**: For visualizing metrics collected by Prometheus. Grafana provides a rich set of visualization options for creating dashboards and monitoring the application's performance.
-- **Trivy**: For vulnerability scanning of Docker images to ensure they are secure before deployment.
-- **Terrascan**: For security and compliance scanning of Terraform configurations.
-- **Infracost**: For estimating and managing cloud infrastructure costs.
+To get started with the Library Inventory System, ensure you have the following tools and technologies installed:
+
+- **Python 3.10+**: Required for running the Flask web application.
+- **Docker**: Containerizes the application to simplify deployment.
+- **Kubernetes**: Manages containerized applications in a clustered environment.
+- **Terraform**: Provisions and manages AWS infrastructure, including EKS.
+- **AWS CLI**: Interacts with AWS services directly from the command line.
+- **Jenkins**: Automates the CI/CD pipeline for building, testing, and deploying the application.
+- **Prometheus**: Monitors application metrics and provides alerting.
+- **Grafana**: Visualizes metrics collected by Prometheus.
+- **Trivy**: Scans Docker images for vulnerabilities to ensure secure deployments.
+- **Terrascan**: Scans Terraform configurations for security and compliance.
+- **Infracost**: Estimates and manages cloud infrastructure costs.
 
 ### Installation
+
+Follow these steps to set up the project:
 
 1. **Clone the repository**:
 
@@ -35,7 +62,9 @@ This project is a comprehensive Library Inventory System designed to manage book
 
 ## Usage
 
-### Run the application locally
+### Running the Application Locally
+
+To run the application on your local machine:
 
 1. **Start the Flask application**:
 
@@ -116,7 +145,7 @@ This project is a comprehensive Library Inventory System designed to manage book
    terraform apply
    ```
 
-   This will set up the necessary infrastructure on AWS, including an EKS cluster for deploying the application.
+   This command will set up the necessary infrastructure on AWS, including an EKS cluster for deploying the application.
 
 ### CI/CD with Jenkins
 
@@ -135,46 +164,22 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
      - Infracost
    - Configure Jenkins to connect to your GitHub repository.
 
-2. **Jenkinsfile Explanation**:
+2. **Pipeline Stages Overview**:
 
-   The `Jenkinsfile` is designed to automate the build, test, and deployment process. Below is a high-level overview of the stages:
-
-   ```groovy
-   pipeline {
-       agent any
-
-       environment {
-           DOCKER_IMAGE = 'orange18036/team3-library'
-           DOCKER_CREDENTIALS = 'dockerhub-credentials'
-           KUBECONFIG_PATH = 'kubeconfig'
-           TERRAFORM_EXEC_PATH = "${terraform}"
-           TERRAFORM_CONFIG_PATH = "${env.WORKSPACE}\\terraform"
-           AWS_CLI_PATH = "${aws}"
-           KUBECTL_PATH = "${kubectl}"
-           NAMESPACE = 'team3'
-           TRIVY_PATH = '${TRIVY}'
-           HELM_PATH = '${HELM}'
-           GRAFANA_ADMIN_PASSWORD = 'admin'
-           PROMETHEUS_SCRAPE_INTERVAL = '30s'
-           INFRACOST_PATH = '${INFRACOST}'
-       }
-   }
-   ```
-
-   **Pipeline Stages**:
+   The `Jenkinsfile` automates the following stages:
 
    - **Checkout**: Pulls the latest code from the GitHub repository.
    - **Build Docker Image**: Builds the Docker image for the application.
-   - **Push Docker Image**: Pushes the Docker image to a Docker registry and GitHub Container Registry (ghcr.io).
-   - **Security Scanning**: Runs Trivy to scan Docker images for vulnerabilities and Terrascan to scan Terraform configurations for security compliance.
-   - **Cost Estimation**: Uses Infracost to estimate and manage infrastructure costs.
+   - **Push Docker Image**: Pushes the Docker image to DockerHub and GitHub Container Registry (ghcr.io).
+   - **Security Scanning**: Uses Trivy for Docker image vulnerability scanning and Terrascan for Terraform configuration scanning.
+   - **Cost Estimation**: Utilizes Infracost for estimating and managing infrastructure costs.
    - **Deploy to Kubernetes**: Deploys the application to the Kubernetes cluster using `kubectl`.
    - **Monitor & Alert Setup**: Deploys Prometheus and Grafana for monitoring and sets up alert rules.
 
 3. **Trigger the Pipeline**:
 
-   - Once the Jenkinsfile is set up, every push to the repository can trigger the pipeline.
-   - The pipeline will automatically build, test, and deploy the application to your Kubernetes cluster.
+   - Once set up, every push to the repository can trigger the pipeline.
+   - The pipeline automatically builds, tests, and deploys the application to your Kubernetes cluster.
 
 ## Monitoring and Alerts
 
@@ -218,6 +223,80 @@ The project includes a `Jenkinsfile` that defines the CI/CD pipeline for buildin
    kubectl create configmap prometheus-server --from-file=alert-rules.yml --from-file=prometheus.yml -n team3 --dry-run=client -o yaml | kubectl apply -f -
    ```
 
+## Project Completion Checklist
+
+### Minimum Requirements
+
+- **Application Development using Flask, Python** ✔️
+- **Dockerization using Docker** ✔️
+- **Infrastructure as Code with Terraform** ✔️
+- **Kubernetes Deployment on EKS** ✔️
+- **CI/CD Pipeline Setup using Jenkins** ✔️
+- **Documentation and Presentation using Markdown, Git** ✔️
+
+### Bonus
+
+- **Monitoring and Logging using Prometheus, Grafana** ✔️
+
+### Extra Bonuses
+
+- **Automated Tagging:** Auto-update the deployment file with the latest Docker image tag after build using Jenkins, Docker ✔️
+- **Continuous Integration:** Implemented live webhook to trigger Jenkins pipeline automatically using Jenkins, GitHub Webhooks ✔️
+- **Container Registry:** Push Docker image to GitHub Container Registry using GitHub Container Registry (ghcr.io) ✔️
+- **GitOps Integration:** Automate and manage deployment configurations using GitOps practices using Git, Jenkins ✔️
+- **Code Quality Assurance:** Integrated code quality checks using Flake8, Black, Pytest ✔️
+- **Unit Testing with Coverage:** Implemented unit tests with code coverage reporting using Coverage ✔️
+- **Security and Compliance:** Implemented security scanning using Terrascan, Trivy ✔️
+- **Cost Management:** Integrated infrastructure cost estimation using Infracost ✔️
+- **Super Slim Docker Image:** Reduced Docker image size to just 19 MB using SlimToolkit ✔️
+- **Terraform Moduling:** Organized Terraform configurations into reusable modules for better maintainability and scalability ✔️
+
+## Screenshots and Explanations
+
+### Complete Test Overview
+
+![Complete Test](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/complete_test.png "Complete Test Overview")
+
+This screenshot shows the successful completion of all test cases, ensuring the application's stability before deployment.
+
+### Jenkins Deployment on EC2
+
+![Deploy Jenkins on EC2](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/deploy_jenkins_on_ec2.png "Jenkins Deployment on EC2")
+
+This image captures the deployment of Jenkins on an EC2 instance, a
+
+crucial part of managing the CI/CD pipeline.
+
+### Grafana Dashboard
+
+![Grafana Dashboard](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/grafan.png "Grafana Dashboard")
+
+The Grafana dashboard provides a comprehensive view of the application's metrics, allowing real-time monitoring of system health.
+
+### Infracost Pull Request Integration
+
+![Infracost Pull Request](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/Infracost_pull_request.png "Infracost Pull Request Integration")
+
+This image demonstrates the integration of Infracost with pull requests, ensuring cost-effective infrastructure changes.
+
+### Prometheus Alerts
+
+![Prometheus Alerts](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/promuthues_alert.png "Prometheus Alerts")
+
+Prometheus alerting is configured to notify the team in case of critical issues, allowing for quick response and resolution.
+
+### Git Push from Jenkins
+
+![Push from Jenkins Git](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/push_from_jenkins_git.png "Git Push from Jenkins")
+
+This image captures the Jenkins pipeline stage where code changes are pushed to the Git repository, ensuring version control.
+
+### Update Docker Tag Name with Jenkins
+
+![Update Docker Tag Name with Jenkins](https://raw.githubusercontent.com/abdelrahman18036/library-inventory-team3/main/screenshots/update_dockertagname_withjenkins.png "Update Docker Tag Name with Jenkins")
+
+This image illustrates the process of updating the Docker tag name during Jenkins pipeline execution, ensuring unique tagging for each build.
+
 ## Full Documentation
 
 For full details on the project, please refer to the **[Documentation.md](Documentation.md)** file.
@@ -225,14 +304,3 @@ For full details on the project, please refer to the **[Documentation.md](Docume
 ## License
 
 This project is licensed under the MIT License.
-
-```
-
-### Summary of Updates:
-- **Security Scanning**: Mentioned Trivy and Terrascan usage in the pipeline.
-- **Cost Estimation**: Mentioned Infracost for cost management.
-- **Push to GitHub Container Registry**: Included in the Docker image push step.
-- **Pipeline Stages**: Updated to reflect all stages from the Jenkinsfile.
-
-This `README.md` provides a comprehensive overview of the project setup, including additional steps and tools used in the Jenkins pipeline.
-```
