@@ -54,8 +54,8 @@ resource "aws_eks_cluster" "library_cluster" {
   role_arn = aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
-    subnet_ids         = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id, aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
-    security_group_ids = [aws_security_group.eks_control_plane_sg.id]
+    subnet_ids         = var.public_subnet_ids
+    security_group_ids = [var.eks_control_plane_sg_id]
   }
 
   timeouts {
@@ -68,7 +68,7 @@ resource "aws_eks_node_group" "library_node_group" {
   cluster_name    = var.cluster_name
   node_group_name = var.node_group_name
   node_role_arn   = aws_iam_role.eks_nodes_role.arn
-  subnet_ids      = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id, aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
+  subnet_ids      = var.public_subnet_ids
 
   scaling_config {
     desired_size = var.eks_node_desired_size
@@ -81,3 +81,8 @@ resource "aws_eks_node_group" "library_node_group" {
     aws_iam_role.eks_nodes_role
   ]
 }
+
+data "aws_eks_cluster_auth" "cluster_auth" {
+  name = aws_eks_cluster.library_cluster.name
+}
+

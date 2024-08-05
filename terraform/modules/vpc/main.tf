@@ -1,3 +1,7 @@
+# Declare the aws_availability_zones data source
+data "aws_availability_zones" "available" {}
+
+# VPC Resource
 resource "aws_vpc" "team_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
@@ -5,6 +9,7 @@ resource "aws_vpc" "team_vpc" {
   }
 }
 
+# Public Subnet A
 resource "aws_subnet" "public_subnet_a" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.public_subnet_cidr_a
@@ -17,6 +22,7 @@ resource "aws_subnet" "public_subnet_a" {
   }
 }
 
+# Public Subnet B
 resource "aws_subnet" "public_subnet_b" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.public_subnet_cidr_b
@@ -29,6 +35,7 @@ resource "aws_subnet" "public_subnet_b" {
   }
 }
 
+# Private Subnet A
 resource "aws_subnet" "private_subnet_a" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.private_subnet_cidr_a
@@ -41,6 +48,7 @@ resource "aws_subnet" "private_subnet_a" {
   }
 }
 
+# Private Subnet B
 resource "aws_subnet" "private_subnet_b" {
   vpc_id                   = aws_vpc.team_vpc.id
   cidr_block               = var.private_subnet_cidr_b
@@ -52,6 +60,7 @@ resource "aws_subnet" "private_subnet_b" {
     "kubernetes.io/role/internal-elb" = "1"
   }
 }
+
 
 resource "aws_security_group" "eks_control_plane_sg" {
   name        = "${var.team_prefix}_eks_control_plane_sg"
@@ -82,7 +91,6 @@ resource "aws_security_group" "eks_nodes_sg" {
   description = "Security group for EKS nodes"
   vpc_id      = aws_vpc.team_vpc.id
 
-  # Existing rule for port 5000
   ingress {
     from_port   = 5000
     to_port     = 5000
@@ -90,23 +98,20 @@ resource "aws_security_group" "eks_nodes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # New rule for Prometheus
   ingress {
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Or more specific CIDR if needed
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # New rule for Grafana
   ingress {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Or more specific CIDR if needed
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Existing egress rule
   egress {
     from_port   = 0
     to_port     = 0
@@ -118,6 +123,7 @@ resource "aws_security_group" "eks_nodes_sg" {
     Name = "${var.team_prefix}_eks_nodes_sg"
   }
 }
+
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.team_vpc.id
   tags = {

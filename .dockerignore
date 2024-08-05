@@ -21,7 +21,7 @@ Jenkinsfile
 Linuxenkinsfile
 # Igonre Screenshots
 screenshots/
-
+tests/
 # Ignore Results
 results/
 

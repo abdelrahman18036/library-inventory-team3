@@ -1,61 +1,86 @@
+# Output for Kubernetes Config (kubeconfig)
 output "kubeconfig" {
   value = <<EOL
 apiVersion: v1
 clusters:
 - cluster:
-    server: ${aws_eks_cluster.library_cluster.endpoint}
-    certificate-authority-data: ${aws_eks_cluster.library_cluster.certificate_authority[0].data}
-  name: ${aws_eks_cluster.library_cluster.name}
+    server: ${module.eks.kubernetes_host}
+    certificate-authority-data: ${module.eks.kubernetes_cluster_ca_certificate}
+  name: ${module.eks.cluster_name}
 contexts:
 - context:
-    cluster: ${aws_eks_cluster.library_cluster.name}
-    user: ${aws_eks_cluster.library_cluster.name}
-  name: ${aws_eks_cluster.library_cluster.name}
-current-context: ${aws_eks_cluster.library_cluster.name}
+    cluster: ${module.eks.cluster_name}
+    user: ${module.eks.cluster_name}
+  name: ${module.eks.cluster_name}
+current-context: ${module.eks.cluster_name}
 kind: Config
 preferences: {}
 users:
-- name: ${aws_eks_cluster.library_cluster.name}
+- name: ${module.eks.cluster_name}
   user:
-    token: ${data.aws_eks_cluster_auth.cluster_auth.token}
+    token: ${module.eks.kubernetes_token}
 EOL
-  description = "Kubeconfig content"
-  sensitive = true  
+  description = "The Kubernetes configuration file content."
+  sensitive   = true
 }
 
-output "certificate_authority_data" {
-  value = aws_eks_cluster.library_cluster.certificate_authority[0].data
-  sensitive = true  # Marking this output as sensitive
+# Output for VPC ID
+output "vpc_id" {
+  value       = module.vpc.vpc_id
+  description = "The ID of the created VPC."
 }
 
-output "cluster_endpoint" {
-  value = aws_eks_cluster.library_cluster.endpoint
+# Output for Public Subnet IDs
+output "public_subnet_ids" {
+  value       = module.vpc.public_subnet_ids
+  description = "The IDs of the public subnets created in the VPC."
 }
 
-output "cluster_name" {
-  value = aws_eks_cluster.library_cluster.name
+# Output for Private Subnet IDs
+output "private_subnet_ids" {
+  value       = module.vpc.private_subnet_ids
+  description = "The IDs of the private subnets created in the VPC."
 }
 
-output "node_group_name" {
-  value = aws_eks_node_group.library_node_group.node_group_name
-}
-
-output "public_subnet_id_a" {
-  value = aws_subnet.public_subnet_a.id
-}
-
-output "public_subnet_id_b" {
-  value = aws_subnet.public_subnet_b.id
-}
-
-output "private_subnet_id_a" {
-  value = aws_subnet.private_subnet_a.id
-}
-
-output "private_subnet_id_b" {
-  value = aws_subnet.private_subnet_b.id
-}
-
+# Output for EKS Cluster Name
 output "eks_cluster_name" {
-  value = aws_eks_cluster.library_cluster.name
+  value       = module.eks.cluster_name
+  description = "The name of the EKS cluster."
+}
+
+# Output for Kubernetes API Server Endpoint
+output "kubernetes_host" {
+  value       = module.eks.kubernetes_host
+  description = "The Kubernetes API server endpoint."
+}
+
+# Output for Kubernetes Cluster CA Certificate
+output "kubernetes_cluster_ca_certificate" {
+  value       = module.eks.kubernetes_cluster_ca_certificate
+  description = "The Kubernetes cluster CA certificate."
+}
+
+# Output for Kubernetes Authentication Token
+output "kubernetes_token" {
+  value       = module.eks.kubernetes_token
+  description = "The Kubernetes authentication token."
+  sensitive   = true
+}
+
+# Output for Public EC2 Instance ID
+output "public_ec2_instance_id" {
+  value       = module.ec2.public_ec2_instance_id
+  description = "The ID of the public EC2 instance."
+}
+
+# Output for Public EC2 Instance Public IP
+output "public_ec2_instance_public_ip" {
+  value       = module.ec2.public_ec2_instance_public_ip
+  description = "The public IP address of the public EC2 instance."
+}
+
+# Output for Public EC2 Instance Public DNS
+output "public_ec2_instance_public_dns" {
+  value       = module.ec2.public_ec2_instance_public_dns
+  description = "The public DNS of the public EC2 instance."
 }
